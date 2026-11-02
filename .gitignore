@@ -3,3 +3,16 @@ obj/
 .vs/
 *.user
 *.suo
+
+# Unity-проект скинов: служебное и собранные бандлы не коммитим
+Unity/[Ll]ibrary/
+Unity/[Tt]emp/
+Unity/[Ll]ogs/
+Unity/[Uu]serSettings/
+Unity/[Bb]uild/
+Unity/*.csproj
+Unity/*.sln
+Unity/*.slnx
+Unity/.vscode/
+Unity/Assets/Skins/*/_build/
+Unity/Assets/Skins/*/_build.meta

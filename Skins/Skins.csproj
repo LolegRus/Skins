@@ -39,6 +39,12 @@
 
 	<ItemGroup>
 		<Compile Include="Core.cs" />
+		<Compile Include="Game.cs" />
+		<Compile Include="Diagnostics.cs" />
+		<Compile Include="SkinLibrary.cs" />
+		<Compile Include="SkinApplier.cs" />
+		<Compile Include="SkinMenu.cs" />
+		<Compile Include="SkinNet.cs" />
 	</ItemGroup>
 
 	<!-- После сборки DLL копируется в папку Mods игры -->

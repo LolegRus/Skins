@@ -1,0 +1,55 @@
+# Spectator Drone (Local) Variant  pos=(-2.723,1.618,-2.198) rot=(-0.000,0.000,0.000) lossyScale=(1.000,1.000,1.000)
+Spectator Drone (Local) Variant [L10] lp=(-2.723,1.618,-2.198) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.000,0.000) :: NetworkPrefab, NetworkedObjectCleaner, CombatClass, HealthPool, Rigidbody, TeamMemberComponent, EventSequence, PoseInterpolator, NetworkTransform, AudioSource, HealthSpawner, GrabbableCameraDrone, GrabbablePlayer, DissolveAnimation, NetworkedColor, MaterialApplicator, MultiMaterialApplicator, PingAbility, FloatSignal
+  Head Pose [L10] lp=(-0.023,1.656,-0.268) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(-0.023,1.656,-0.268) :: TransformTracker
+  Left Hand [L10] lp=(-0.023,1.656,-0.268) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(-0.023,1.656,-0.268) :: TransformTracker
+  Right Hand [L10] lp=(-0.023,1.656,-0.268) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(-0.023,1.656,-0.268) :: TransformTracker
+  Head [L10] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.000,0.000) :: Rigidbody, PoseInterpolator, CombatClassTrackedComponent, SphereCollider, DamageableCombatComponent, MeleeSphere
+    Dustonance Positional Player [L0] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.000,0.000) :: DustonancePlayer, VoiceBroadcastTrigger, VoiceReceiptTrigger, AudioSource
+    Fire Pos [L10] lp=(-0.018,0.000,0.312) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(-0.018,0.000,0.312) :: SignalEvent, Grabber
+    Camera Drone [L10] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.000,0.000) :: MeshFilter, MeshRenderer
+      · MeshFilter: 'Drone' verts=1280 sub=1 readable=False
+      · Renderer: enabled=True, materials: Realtime Procedural Grain (Dust/Grain (Realtime))
+      Antenna 0 [L10] lp=(-0.019,0.114,-0.213) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(-0.019,0.114,-0.213) :: MeshFilter, MeshRenderer, SpringyDongle
+        · MeshFilter: 'Antenna 0' verts=40 sub=1 readable=False
+        · Renderer: enabled=True, materials: Realtime Procedural Grain (Dust/Grain (Realtime))
+        Antenna 1 [L10] lp=(0.000,0.094,-0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(-0.019,0.207,-0.213) :: MeshFilter, MeshRenderer, SpringyDongle
+          · MeshFilter: 'Antenna 1' verts=27 sub=1 readable=False
+          · Renderer: enabled=True, materials: Realtime Procedural Grain (Dust/Grain (Realtime))
+      Fin LD [L10] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.000,0.000) :: MeshFilter, MeshRenderer, Appendage
+        · MeshFilter: 'Fin LD' verts=135 sub=1 readable=False
+        · Renderer: enabled=True, materials: Realtime Procedural Grain (Dust/Grain (Realtime))
+      Fin LU [L10] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.000,0.000) :: MeshFilter, MeshRenderer, Appendage
+        · MeshFilter: 'Fin LU' verts=122 sub=1 readable=False
+        · Renderer: enabled=True, materials: Realtime Procedural Grain (Dust/Grain (Realtime))
+      Fin RD [L10] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.000,0.000) :: MeshFilter, MeshRenderer, Appendage
+        · MeshFilter: 'Fin RD' verts=135 sub=1 readable=False
+        · Renderer: enabled=True, materials: Realtime Procedural Grain (Dust/Grain (Realtime))
+      Fin RU [L10] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.000,0.000) :: MeshFilter, MeshRenderer, Appendage
+        · MeshFilter: 'Fin RU' verts=122 sub=1 readable=False
+        · Renderer: enabled=True, materials: Realtime Procedural Grain (Dust/Grain (Realtime))
+    Flash [L10] lp=(0.060,-0.017,0.137) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.060,-0.017,0.137) :: NetworkedEvent, AudioSource
+      ModularGooMuzzleFlash [L10] lp=(-0.106,0.000,0.033) lr=(-0.000,180.000,0.000) ls=(-0.092,-0.092,-0.092) root=(-0.046,-0.017,0.170) :: ParticleSystem, ParticleSystemRenderer
+        · Renderer: enabled=True, materials: muzzle_goo_modular (Particles/Standard Unlit)
+        BigFlash [L10] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(-0.046,-0.017,0.170) :: ParticleSystem, ParticleSystemRenderer
+          · Renderer: enabled=True, materials: muzzle_goo_modular (Particles/Standard Unlit)
+        FlashLinger [L10, off] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(-0.046,-0.017,0.170) :: ParticleSystem, ParticleSystemRenderer
+          · Renderer: enabled=True, materials: muzzle_goo_modular (Particles/Standard Unlit)
+    Camera [L8] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.000,0.000) :: Screenshotter
+    Crit Display [L10, off] lp=(0.029,-0.013,-0.138) lr=(-0.000,0.000,0.000) ls=(2.063,2.063,2.063) root=(0.029,-0.013,-0.138) :: CritAnimator
+      Crit Display [L10] lp=(0.000,0.000,0.309) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.029,-0.013,0.499) :: MeshFilter, MeshRenderer
+        · MeshFilter: 'Crit Spikes' verts=24 sub=1 readable=False
+        · Renderer: enabled=True, materials: Damage Crit Mesh (Dust/Grain (Realtime))
+    Grabbable Collider [L0, off] lp=(0.000,0.000,-0.039) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.000,-0.039) :: SphereCollider
+    Trail [L10, off] lp=(0.000,0.000,-0.642) lr=(-0.000,0.000,0.000) ls=(3.333,3.333,3.333) root=(0.000,0.000,-0.642) :: TrailRenderer
+      · Renderer: enabled=True, materials: Trail (Dust/Additive)
+    Damage Mesh [L10, off] lp=(0.000,0.000,-0.007) lr=(-0.000,0.000,356.804) ls=(0.300,0.300,0.300) root=(0.000,0.000,-0.007) :: MeshFilter, MeshRenderer
+      · MeshFilter: 'Icosphere' verts=240 sub=1 readable=False
+      · Renderer: enabled=False, materials: Damage Mesh (Dust/Grain (Realtime))
+    Witch Hat [L10] lp=(0.000,0.163,-0.036) lr=(-0.000,0.000,0.000) ls=(0.837,0.837,0.837) root=(0.000,0.163,-0.036) :: MeshFilter, MeshRenderer
+      · MeshFilter: 'Witch Hat' verts=436 sub=1 readable=False
+      · Renderer: enabled=True, materials: Realtime Procedural Grain (Dust/Grain (Realtime))
+  Left Hand [L10] lp=(-0.500,1.250,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(-0.500,1.250,0.000) :: Rigidbody, PoseInterpolator, CombatClassTrackedComponent
+  Right Hand [L10] lp=(0.500,1.250,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.500,1.250,0.000) :: Rigidbody, PoseInterpolator, CombatClassTrackedComponent
+  Locomotion Driver [L10] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.000,0.000) :: LocomotionDriver, FlightLocomotionBehaviour, YeetLocomotionBehaviour, SignalEvent, SignalEvent
+  Damage Effects [L8] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(0.300,0.300,0.300) root=(0.000,0.000,0.000) :: DamageFlashAnimator, MaterialApplicator
+  FOV Changer [L8] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.000,0.000) :: DroneFovZoomer

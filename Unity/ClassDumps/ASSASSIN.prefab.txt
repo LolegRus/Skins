@@ -1,0 +1,204 @@
+# Assassin (Local) Variant  pos=(3.380,-2.074,-88.182) rot=(-0.000,0.000,0.000) lossyScale=(1.000,1.000,1.000)
+Assassin (Local) Variant [L9] lp=(3.380,-2.074,-88.182) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.000,0.000) :: NetworkPrefab, NetworkedObjectCleaner, CombatClass, HealthPool, Rigidbody, PoseInterpolator, NetworkTransform, TeamMemberComponent, HealthSpawner, NetworkedColor, DissolveAnimation, MaterialApplicator, MultiMaterialApplicator, FloatSignal, EventSequence, KillBounds
+  Head Pose [L9] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.000,0.000) :: TransformTracker
+  Left Hand Pose [L9] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.000,0.000) :: TransformTracker
+  Right Hand Pose [L9] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.000,0.000) :: TransformTracker
+  Energy System [L8] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.000,0.000) :: EnergyGenerator, AudioSource, EnergyCapacitor
+  Assassin Anchors [L9] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.000,0.000) :: NetworkedEvent, NetworkedRendererActivity, DelayedEvent
+    Body [L10] lp=(-0.000,0.469,-0.046) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.469,-0.046) :: MeshFilter, MeshRenderer, Appendage, DamageableCombatComponent, BoxCollider, Rigidbody
+      · MeshFilter: 'Body' verts=1210 sub=1 readable=False
+      · Renderer: enabled=True, materials: Realtime Procedural Grain (Dust/Grain (Realtime))
+      Body Damage Mesh [L10] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.469,-0.046) :: MeshFilter, MeshRenderer
+        · MeshFilter: 'Body' verts=936 sub=1 readable=False
+        · Renderer: enabled=False, materials: Damage Mesh (Dust/Grain (Realtime))
+      Grab Center of Mass [L8] lp=(0.000,-0.275,0.020) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.194,-0.026) :: GrabbablePlayer
+      BodyBelt [L9] lp=(0.000,-0.251,-0.022) lr=(-0.000,-0.000,-0.000) ls=(1.000,1.000,1.000) root=(0.000,0.218,-0.068) :: MeshFilter, MeshRenderer, DamageableCombatComponent, BoxCollider, Appendage
+        · MeshFilter: 'BodyBelt' verts=538 sub=1 readable=False
+        · Renderer: enabled=True, materials: Realtime Procedural Grain (Dust/Grain (Realtime))
+        BodyLower [L9] lp=(-0.000,-0.085,-0.001) lr=(-0.000,-0.000,-0.000) ls=(1.000,1.000,1.000) root=(0.000,0.133,-0.069) :: MeshFilter, MeshRenderer, DamageableCombatComponent, SphereCollider, Appendage
+          · MeshFilter: 'BodyLower' verts=851 sub=1 readable=False
+          · Renderer: enabled=True, materials: Realtime Procedural Grain (Dust/Grain (Realtime))
+    Head [L10] lp=(0.000,0.641,0.016) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.641,0.016) :: MeshFilter, MeshRenderer, Rigidbody, DamageableCombatComponent, PoseInterpolator, CombatClassTrackedComponent, SphereCollider
+      · MeshFilter: 'Head' verts=894 sub=1 readable=False
+      · Renderer: enabled=True, materials: Realtime Procedural Grain (Dust/Grain (Realtime))
+      Dustonance Positional Player [L10] lp=(0.000,0.000,-0.027) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.641,-0.011) :: DustonancePlayer, VoiceBroadcastTrigger, VoiceReceiptTrigger, AudioSource
+      Crit Display [L0, off] lp=(0.000,0.000,-0.097) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.641,-0.081) :: CritAnimator
+        Crit Display [L0] lp=(0.000,0.000,0.272) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.641,0.191) :: MeshFilter, MeshRenderer
+          · MeshFilter: 'Crit Spikes' verts=24 sub=1 readable=False
+          · Renderer: enabled=True, materials: Damage Crit Mesh (Dust/Grain (Realtime))
+      Head DM [L10] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.641,0.016) :: MeshFilter, MeshRenderer
+        · MeshFilter: 'Head' verts=395 sub=1 readable=False
+        · Renderer: enabled=False, materials: Damage Mesh (Dust/Grain (Realtime))
+      Camera Focus [L8] lp=(0.000,0.027,0.083) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.668,0.099) :: 
+      Witch Hat [L10] lp=(0.000,0.092,-0.034) lr=(-0.000,0.000,0.000) ls=(0.859,0.859,0.859) root=(0.000,0.734,-0.018) :: MeshFilter, MeshRenderer
+        · MeshFilter: 'Witch Hat' verts=436 sub=1 readable=False
+        · Renderer: enabled=True, materials: Realtime Procedural Grain (Dust/Grain (Realtime))
+    Left Hand [L9] lp=(-0.741,0.393,-0.019) lr=(-0.000,270.000,0.000) ls=(1.000,1.000,1.000) root=(-0.741,0.393,-0.019) :: MeshFilter, MeshRenderer, Rigidbody, CombatClassTrackedComponent, PoseInterpolator, Grabber
+      · MeshFilter: 'Left Hand' verts=356 sub=1 readable=False
+      · Renderer: enabled=True, materials: Realtime Procedural Grain (Dust/Grain (Realtime))
+      Arm Left [L9] lp=(-0.015,-0.001,-0.290) lr=(0.000,-0.000,0.000) ls=(1.000,1.000,1.000) root=(-0.451,0.392,-0.035) :: MeshFilter, MeshRenderer, Appendage, DamageableCombatComponent, BoxCollider
+        · MeshFilter: 'Arm Left' verts=343 sub=1 readable=False
+        · Renderer: enabled=True, materials: Realtime Procedural Grain (Dust/Grain (Realtime))
+        Arm Center Offset [L8] lp=(-0.000,0.000,0.161) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(-0.612,0.392,-0.035) :: 
+        Arm Left DM [L9] lp=(0.000,0.000,0.000) lr=(-0.000,-0.000,0.000) ls=(1.000,1.000,1.000) root=(-0.451,0.392,-0.035) :: MeshFilter, MeshRenderer
+          · MeshFilter: 'Arm Left' verts=342 sub=1 readable=False
+          · Renderer: enabled=False, materials: Damage Mesh (Dust/Grain (Realtime))
+        Menu Icon Anchor [L9] lp=(0.041,-0.001,0.169) lr=(-0.000,352.960,90.000) ls=(1.000,1.000,1.000) root=(-0.620,0.392,0.006) :: 
+          Circle [L0] lp=(0.002,-0.000,0.003) lr=(-0.000,90.000,0.000) ls=(0.021,0.021,0.021) root=(-0.623,0.394,0.007) :: MeshFilter, MeshRenderer
+            · MeshFilter: 'Circle' verts=64 sub=1 readable=False
+            · Renderer: enabled=True, materials: Solid UI Panel (Dust/Additive)
+          Class Icon Assassin [L0] lp=(0.002,-0.001,0.003) lr=(0.000,90.000,180.000) ls=(0.013,0.013,0.013) root=(-0.623,0.394,0.007) :: 
+            Curve.001 [L0] lp=(-0.000,0.000,0.000) lr=(270.000,180.000,0.000) ls=(1.000,1.000,1.000) root=(-0.623,0.394,0.007) :: MeshFilter, MeshRenderer
+              · MeshFilter: 'Curve.001' verts=44 sub=1 readable=False
+              · Renderer: enabled=True, materials: Solid UI Panel (Dust/Additive)
+            Curve.006 [L0] lp=(-0.000,0.000,0.000) lr=(270.000,180.000,0.000) ls=(1.000,1.000,1.000) root=(-0.623,0.394,0.007) :: MeshFilter, MeshRenderer
+              · MeshFilter: 'Curve.006' verts=64 sub=1 readable=False
+              · Renderer: enabled=True, materials: Solid UI Panel (Dust/Additive)
+          Health UI [L0] lp=(-0.005,-0.004,-0.033) lr=(90.000,90.000,0.000) ls=(0.034,0.034,0.034) root=(-0.587,0.387,0.014) :: HealthUI, MeshNumber
+            Ones [L0] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(-0.587,0.387,0.014) :: MeshFilter, MeshRenderer
+              · MeshFilter: 'Text.035' verts=48 sub=1 readable=False
+              · Renderer: enabled=True, materials: Health (Dust/Grain (Realtime))
+            Tens [L0] lp=(0.400,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(-0.574,0.387,0.016) :: MeshFilter, MeshRenderer
+              · MeshFilter: 'Text.035' verts=48 sub=1 readable=False
+              · Renderer: enabled=True, materials: Health (Dust/Grain (Realtime))
+            Hundreds [L0] lp=(0.800,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(-0.560,0.387,0.017) :: MeshFilter, MeshRenderer
+              · MeshFilter: 'Text.026' verts=16 sub=1 readable=False
+              · Renderer: enabled=True, materials: Health (Dust/Grain (Realtime))
+      Sword Left [L9] lp=(-0.026,0.001,0.032) lr=(-0.000,270.000,270.000) ls=(1.000,1.000,1.000) root=(-0.773,0.393,-0.046) :: MeshFilter, MeshRenderer, ScalarProceduralAnimation, ProceduralAnimationDriver, NetworkedEvent, AudioSource, NetworkedAudioSource, NetworkedGameobjectActivity, SignalEvent
+        · MeshFilter: 'Sword Left' verts=307 sub=1 readable=False
+        · Renderer: enabled=True, materials: Realtime Procedural Grain (Dust/Grain (Realtime))
+        Segment 0 Left [L9] lp=(-0.000,-0.003,0.001) lr=(270.000,90.000,0.000) ls=(1.000,1.000,1.000) root=(-0.770,0.394,-0.046) :: MeshFilter, MeshRenderer
+          · MeshFilter: 'Segment 0 Left' verts=24 sub=1 readable=False
+          · Renderer: enabled=True, materials: Realtime Procedural Grain (Dust/Grain (Realtime))
+          Segment 1 Left [L9] lp=(0.000,0.000,0.180) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(-0.950,0.394,-0.046) :: MeshFilter, MeshRenderer
+            · MeshFilter: 'Segment 1 Left' verts=24 sub=1 readable=False
+            · Renderer: enabled=True, materials: Realtime Procedural Grain (Dust/Grain (Realtime))
+            Segment 2 Left [L9] lp=(0.000,-0.000,0.196) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(-1.146,0.394,-0.046) :: MeshFilter, MeshRenderer
+              · MeshFilter: 'Segment 2 Left' verts=24 sub=1 readable=False
+              · Renderer: enabled=True, materials: Realtime Procedural Grain (Dust/Grain (Realtime))
+              Segment 3 Left [L9] lp=(0.000,0.000,0.202) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(-1.348,0.394,-0.046) :: MeshFilter, MeshRenderer
+                · MeshFilter: 'Segment 3 Left' verts=24 sub=1 readable=False
+                · Renderer: enabled=True, materials: Realtime Procedural Grain (Dust/Grain (Realtime))
+                Melee Volume [L8] lp=(0.000,0.000,0.172) lr=(0.000,0.000,-0.000) ls=(1.000,1.000,1.000) root=(-1.520,0.394,-0.046) :: MeleeVolume, TrailRenderer
+                  · Renderer: enabled=False, materials: Trail (Dust/Additive)
+                ModularJetFlame2 [L0, off] lp=(0.000,0.000,-0.588) lr=(-0.000,-0.000,180.000) ls=(0.120,0.120,0.120) root=(-0.760,0.394,-0.046) :: ParticleSystem, ParticleSystemRenderer
+                  · Renderer: enabled=True, materials: Blast (Dust/Additive)
+                  Fire [L0] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(-0.760,0.394,-0.046) :: ParticleSystem, ParticleSystemRenderer
+                    · Renderer: enabled=True, materials: Muzzle Fire (Dust/Additive)
+                  Dust [L0] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(-0.760,0.394,-0.046) :: ParticleSystem, ParticleSystemRenderer
+                    · Renderer: enabled=True, materials: Big Glow (Dust/Additive)
+              Melee Sphere (02) [L8] lp=(0.000,0.000,0.150) lr=(90.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(-1.295,0.394,-0.046) :: TrailRenderer
+                · Renderer: enabled=True, materials: Trail (Dust/Additive)
+            Melee Sphere (01) [L8] lp=(0.000,0.000,0.147) lr=(0.000,0.000,-0.000) ls=(1.000,1.000,1.000) root=(-1.097,0.394,-0.046) :: TrailRenderer
+              · Renderer: enabled=False, materials: Trail (Dust/Additive)
+          Melee Sphere [L9] lp=(0.000,0.000,0.128) lr=(0.000,0.000,-0.000) ls=(1.000,1.000,1.000) root=(-0.898,0.394,-0.046) :: TrailRenderer
+            · Renderer: enabled=True, materials: Trail (Dust/Additive)
+        ModularLightningImpact [L0] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(-0.773,0.393,-0.046) :: ParticleSystemRenderer, ParticleSystem
+          · Renderer: enabled=True, materials: Laserball (Dust/Additive)
+          Arcs [L0] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(-0.773,0.393,-0.046) :: ParticleSystem, ParticleSystemRenderer
+            · Renderer: enabled=True, materials: Lightning 2x2 (Dust/Additive)
+          Glow [L0] lp=(-0.000,0.240,-0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(-1.013,0.393,-0.046) :: ParticleSystem, ParticleSystemRenderer
+            · Renderer: enabled=True, materials: Blast (Dust/Additive)
+          Point light [L0] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(-0.773,0.393,-0.046) :: Light, UniversalAdditionalLightData
+          Sparks [L0] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(-0.773,0.393,-0.046) :: ParticleSystem, ParticleSystemRenderer
+            · Renderer: enabled=True, materials: Muzzle Smallfire (Dust/Additive)
+      Smoke Grenade Launcher Left [L10] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(-0.741,0.393,-0.019) :: AudioSource, Gun, PlayerThrownGun
+        Contact Smoke Grenade VISUAL [L0, off] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(-0.741,0.393,-0.019) :: MultiMaterialApplicator, NetworkedGameobjectActivity
+          Sphere [L0] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(0.133,0.133,0.133) root=(-0.741,0.393,-0.019) :: MeshFilter, MeshRenderer
+            · MeshFilter: 'Sphere' verts=515 sub=1 readable=True
+            · Renderer: enabled=True, materials: Watcher (Dust/Grain (Realtime))
+          Outter Sphere [L0] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(0.158,0.158,0.158) root=(-0.741,0.393,-0.019) :: MeshFilter, MeshRenderer
+            · MeshFilter: 'Sphere' verts=515 sub=1 readable=True
+            · Renderer: enabled=True, materials: Shield Clouds Dim (Dust/Additive)
+          Trail [L0] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(-0.741,0.393,-0.019) :: ParticleSystem, ParticleSystemRenderer, TrailRenderer
+            · Renderer: enabled=True, materials: Big Glow (Dust/Additive)
+    Right Hand [L9] lp=(0.746,0.393,-0.019) lr=(-0.000,90.000,0.000) ls=(1.000,1.000,1.000) root=(0.746,0.393,-0.019) :: MeshFilter, MeshRenderer, Rigidbody, PoseInterpolator, CombatClassTrackedComponent, Grabber
+      · MeshFilter: 'Right Hand' verts=181 sub=1 readable=False
+      · Renderer: enabled=True, materials: Realtime Procedural Grain (Dust/Grain (Realtime))
+      Arm Right [L9] lp=(0.015,-0.001,-0.290) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.456,0.392,-0.035) :: MeshFilter, MeshRenderer, DamageableCombatComponent, Appendage, BoxCollider
+        · MeshFilter: 'Arm Right' verts=343 sub=1 readable=False
+        · Renderer: enabled=True, materials: Realtime Procedural Grain (Dust/Grain (Realtime))
+        Arm Center Offset [L8] lp=(0.000,0.000,0.158) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.614,0.392,-0.035) :: 
+        Arm Right DM [L9] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,-0.000) ls=(1.000,1.000,1.000) root=(0.456,0.392,-0.035) :: MeshFilter, MeshRenderer
+          · MeshFilter: 'Arm Right' verts=342 sub=1 readable=False
+          · Renderer: enabled=False, materials: Damage Mesh (Dust/Grain (Realtime))
+        Menu Icon Anchor [L9] lp=(-0.043,-0.001,0.171) lr=(-0.000,6.440,90.000) ls=(1.000,1.000,1.000) root=(0.628,0.391,0.008) :: 
+          Circle [L0] lp=(0.002,-0.002,0.003) lr=(-0.000,92.942,357.750) ls=(0.021,0.021,0.021) root=(0.630,0.394,0.006) :: MeshFilter, MeshRenderer
+            · MeshFilter: 'Circle' verts=64 sub=1 readable=False
+            · Renderer: enabled=True, materials: Solid UI Panel (Dust/Additive)
+          Class Icon Assassin [L0] lp=(0.002,-0.003,0.003) lr=(0.000,87.091,180.000) ls=(0.013,0.013,0.013) root=(0.630,0.393,0.005) :: 
+            Curve.001 [L0] lp=(-0.000,0.000,0.000) lr=(270.000,180.000,0.000) ls=(1.000,1.000,1.000) root=(0.630,0.393,0.005) :: MeshFilter, MeshRenderer
+              · MeshFilter: 'Curve.001' verts=44 sub=1 readable=False
+              · Renderer: enabled=True, materials: Solid UI Panel (Dust/Additive)
+            Curve.006 [L0] lp=(-0.000,0.000,0.000) lr=(270.000,180.000,0.000) ls=(1.000,1.000,1.000) root=(0.630,0.393,0.005) :: MeshFilter, MeshRenderer
+              · MeshFilter: 'Curve.006' verts=64 sub=1 readable=False
+              · Renderer: enabled=True, materials: Solid UI Panel (Dust/Additive)
+          Health UI [L0] lp=(-0.005,-0.004,-0.048) lr=(270.000,270.000,0.000) ls=(0.034,0.034,0.034) root=(0.580,0.387,0.010) :: HealthUI, MeshNumber
+            Ones [L0] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.580,0.387,0.010) :: MeshFilter, MeshRenderer
+              · MeshFilter: 'Text.035' verts=48 sub=1 readable=False
+              · Renderer: enabled=True, materials: Health (Dust/Grain (Realtime))
+            Tens [L0] lp=(0.400,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.593,0.387,0.009) :: MeshFilter, MeshRenderer
+              · MeshFilter: 'Text.035' verts=48 sub=1 readable=False
+              · Renderer: enabled=True, materials: Health (Dust/Grain (Realtime))
+            Hundreds [L0] lp=(0.800,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.607,0.387,0.007) :: MeshFilter, MeshRenderer
+              · MeshFilter: 'Text.026' verts=16 sub=1 readable=False
+              · Renderer: enabled=True, materials: Health (Dust/Grain (Realtime))
+      Sword Right [L9] lp=(0.026,-0.001,0.031) lr=(-0.000,90.000,90.000) ls=(1.000,1.000,1.000) root=(0.777,0.392,-0.046) :: MeshFilter, MeshRenderer, ProceduralAnimationDriver, ScalarProceduralAnimation, NetworkedEvent, AudioSource, NetworkedAudioSource, NetworkedGameobjectActivity, SignalEvent
+        · MeshFilter: 'Sword Right' verts=307 sub=1 readable=False
+        · Renderer: enabled=True, materials: Realtime Procedural Grain (Dust/Grain (Realtime))
+        Segment 0 Right [L9] lp=(0.000,-0.003,0.001) lr=(270.000,270.000,0.000) ls=(1.000,1.000,1.000) root=(0.773,0.392,-0.046) :: MeshFilter, MeshRenderer
+          · MeshFilter: 'Segment 0 Right' verts=24 sub=1 readable=False
+          · Renderer: enabled=True, materials: Realtime Procedural Grain (Dust/Grain (Realtime))
+          Segment 1 Right [L9] lp=(0.000,0.000,0.182) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.956,0.392,-0.046) :: MeshFilter, MeshRenderer
+            · MeshFilter: 'Segment 1 Right' verts=24 sub=1 readable=False
+            · Renderer: enabled=True, materials: Realtime Procedural Grain (Dust/Grain (Realtime))
+            Segment 2 Right [L9] lp=(0.000,0.000,0.204) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(1.160,0.392,-0.046) :: MeshFilter, MeshRenderer
+              · MeshFilter: 'Segment 2 Right' verts=24 sub=1 readable=False
+              · Renderer: enabled=True, materials: Realtime Procedural Grain (Dust/Grain (Realtime))
+              Segment 3 Right [L9] lp=(0.000,0.000,0.206) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(1.366,0.392,-0.046) :: MeshFilter, MeshRenderer
+                · MeshFilter: 'Segment 3 Right' verts=24 sub=1 readable=False
+                · Renderer: enabled=True, materials: Realtime Procedural Grain (Dust/Grain (Realtime))
+                Melee Volume [L8] lp=(-0.000,0.000,0.177) lr=(0.000,0.000,180.000) ls=(1.000,1.000,1.000) root=(1.543,0.392,-0.046) :: MeleeVolume, TrailRenderer
+                  · Renderer: enabled=False, materials: Trail (Dust/Additive)
+                ModularJetFlame2 [L0, off] lp=(0.000,-0.000,-0.588) lr=(-0.000,-0.000,180.000) ls=(0.120,0.120,0.120) root=(0.778,0.392,-0.046) :: ParticleSystem, ParticleSystemRenderer
+                  · Renderer: enabled=True, materials: Blast (Dust/Additive)
+                  Fire [L0] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.778,0.392,-0.046) :: ParticleSystem, ParticleSystemRenderer
+                    · Renderer: enabled=True, materials: Muzzle Fire (Dust/Additive)
+                  Dust [L0] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.778,0.392,-0.046) :: ParticleSystem, ParticleSystemRenderer
+                    · Renderer: enabled=True, materials: Big Glow (Dust/Additive)
+              Melee Sphere (03) [L8] lp=(-0.000,0.000,0.150) lr=(90.000,180.000,0.000) ls=(1.000,1.000,1.000) root=(1.310,0.392,-0.046) :: TrailRenderer
+                · Renderer: enabled=True, materials: Trail (Dust/Additive)
+            Melee Sphere (02) [L8] lp=(-0.000,0.000,0.143) lr=(0.000,0.000,180.000) ls=(1.000,1.000,1.000) root=(1.099,0.392,-0.046) :: TrailRenderer
+              · Renderer: enabled=False, materials: Trail (Dust/Additive)
+          Melee Sphere [L9] lp=(0.000,-0.000,0.131) lr=(0.000,0.000,180.000) ls=(1.000,1.000,1.000) root=(0.904,0.392,-0.046) :: TrailRenderer
+            · Renderer: enabled=True, materials: Trail (Dust/Additive)
+        ModularLightningImpact [L0] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.777,0.392,-0.046) :: ParticleSystemRenderer, ParticleSystem
+          · Renderer: enabled=True, materials: Laserball (Dust/Additive)
+          Arcs [L0] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.777,0.392,-0.046) :: ParticleSystem, ParticleSystemRenderer
+            · Renderer: enabled=True, materials: Lightning 2x2 (Dust/Additive)
+          Glow [L0] lp=(-0.000,0.240,-0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(1.017,0.392,-0.046) :: ParticleSystem, ParticleSystemRenderer
+            · Renderer: enabled=True, materials: Blast (Dust/Additive)
+          Point light [L0] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.777,0.392,-0.046) :: Light, UniversalAdditionalLightData
+          Sparks [L0] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.777,0.392,-0.046) :: ParticleSystem, ParticleSystemRenderer
+            · Renderer: enabled=True, materials: Muzzle Smallfire (Dust/Additive)
+      Smoke Grenade Launcher Right [L10] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.746,0.393,-0.019) :: AudioSource, Gun, PlayerThrownGun
+        Contact Smoke Grenade VISUAL [L0, off] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.746,0.393,-0.019) :: MultiMaterialApplicator, NetworkedGameobjectActivity
+          Sphere [L0] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(0.133,0.133,0.133) root=(0.746,0.393,-0.019) :: MeshFilter, MeshRenderer
+            · MeshFilter: 'Sphere' verts=515 sub=1 readable=True
+            · Renderer: enabled=True, materials: Watcher (Dust/Grain (Realtime))
+          Outter Sphere [L0] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(0.158,0.158,0.158) root=(0.746,0.393,-0.019) :: MeshFilter, MeshRenderer
+            · MeshFilter: 'Sphere' verts=515 sub=1 readable=True
+            · Renderer: enabled=True, materials: Shield Clouds Dim (Dust/Additive)
+          Trail [L0] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.746,0.393,-0.019) :: ParticleSystem, ParticleSystemRenderer, TrailRenderer
+            · Renderer: enabled=True, materials: Big Glow (Dust/Additive)
+  Assassin Locomotion Driver [L9] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.000,0.000) :: LocomotionDriver, StandLocomotionBehaviour, WalkLocomotionBehaviour, GravityLocomotionBehaviour, GrabLocomotionBehaviour, GrabLocomotionBehaviour, PunchLocomotionBehaviour, PunchLocomotionBehaviour, DirectionCombiner, DashLocomotionBehaviour, FloatSignalCombinator, AsymmetricDamper, YeetLocomotionBehaviour, SignalEvent, SignalEvent, WallRunLocomotionBehaviour, ParkourLocomotionBehaviour
+  Damage Effects [L8] lp=(0.000,0.000,0.000) lr=(-0.000,90.000,-0.000) ls=(0.900,0.900,0.900) root=(0.000,0.000,0.000) :: AudioSource, DamageFlashAnimator, MaterialApplicator
+  Audio Events [L9] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.000,0.000) :: AudioSource
+    Grab [L9] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.000,0.000) :: RandomAudioSource, NetworkedRandomAudioSource
+    Grab Break [L9] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.000,0.000) :: RandomAudioSource, NetworkedRandomAudioSource
+    Dash [L9] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.000,0.000) :: RandomAudioSource, NetworkedRandomAudioSource
+    Health Pickup [L9] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.000,0.000) :: RandomAudioSource, NetworkedRandomAudioSource
+    Death Explosion [L8] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.000,0.000) :: NetworkedRandomAudioSource, RandomAudioSource
+    Kill Confirmation [L8] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.000,0.000) :: AudioSource
+    Slide [L8] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.000,0.000) :: RandomAudioSource, NetworkedRandomAudioSource
+    Air Jump [L8] lp=(0.000,0.000,0.000) lr=(-0.000,0.000,0.000) ls=(1.000,1.000,1.000) root=(0.000,0.000,0.000) :: RandomAudioSource, NetworkedRandomAudioSource
