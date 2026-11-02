@@ -17,6 +17,7 @@
 <summary>Подробнее</summary>
 
 - Скины — это файлы `.skin` в папке игры `UserData\Skins`. Положи туда файл, и скин появится в списке.
+  Скин **Cowboy** для Kobold идёт вместе с модом и появится там сам.
 - Чтобы другой игрок увидел твой скин, у него должен стоять этот мод и лежать тот же файл скина.
   Игроки без мода видят обычного персонажа — играть вместе это не мешает.
 - Сделать свой скин можно в Unity-проекте `Unity\` этого репозитория: положи модель в
@@ -100,6 +101,7 @@ dotnet build Skins/Skins.csproj -c Release -p:DustPath="D:\Games\Dust 0.8.3"
 <summary>More details</summary>
 
 - Skins are `.skin` files in the game's `UserData\Skins` folder. Drop a file there and the skin shows up in the list.
+  The **Cowboy** skin for Kobold comes with the mod and shows up there by itself.
 - For another player to see your skin, they need this mod and the same skin file.
   Players without the mod see the normal character — you can still play together.
 - You can make your own skin in the `Unity\` project of this repository: put the model into

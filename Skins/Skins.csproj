@@ -47,6 +47,11 @@
 		<Compile Include="SkinNet.cs" />
 	</ItemGroup>
 
+	<!-- Скины, которые идут с модом: Windows-бандлы из Unity-проекта (Tools → Skins → Build All кладёт их в Builtin\) -->
+	<ItemGroup>
+		<EmbeddedResource Include="Builtin\*.skin" LogicalName="Skins.Builtin.%(Filename)%(Extension)" />
+	</ItemGroup>
+
 	<!-- После сборки DLL копируется в папку Mods игры -->
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
 		<Exec Command="COPY &quot;$(TargetPath)&quot; &quot;$(DustPath)\Mods&quot;" />

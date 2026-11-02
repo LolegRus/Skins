@@ -26,7 +26,8 @@ using Object = UnityEngine.Object;
 ///   «+путь узла в игре» с детьми         — новые детали: дети вешаются на этот узел как есть.
 /// Так модам не нужно ни считать позы, ни править вершины — на Quest это и не получилось бы.
 ///
-/// Бандлы: Build/Windows → игра UserData\Skins\&lt;Имя&gt;.skin, Build/Android → Quest mods\Skins\build\&lt;Имя&gt;.skin.
+/// Бандлы: Build/Windows → игра UserData\Skins\&lt;Имя&gt;.skin и Skins\Builtin\ (зашиваются в DLL),
+/// Build/Android → Quest mods\Skins\build\&lt;Имя&gt;.skin (идут в .qmod — допиши их в fileCopies mod.json).
 ///
 /// Командная строка:
 ///   Unity.exe -batchmode -nographics -projectPath Unity -executeMethod SkinBuilder.BuildAll -quit
@@ -40,6 +41,7 @@ public static class SkinBuilder
     private const string FittedDir = "_build";     // подогнанные меши и плоские префабы — генерируются
     private const string DefaultDustPath = @"C:\Users\loleg\Desktop\DUST\Dust 0.8.3";
     private const string QuestBuildDir = @"..\..\Quest mods\Skins\build";
+    private const string BuiltinDir = @"..\Skins\Builtin";   // скины, которые идут с ПК-модом (EmbeddedResource)
     private const string OwnMaterialPrefix = "Own";
 
     [MenuItem("Tools/Skins/Build All")]
@@ -114,6 +116,7 @@ public static class SkinBuilder
 
         Deliver(windows, names, Directory.Exists(dust) ? Path.Combine(dust, "UserData", "Skins") : null, "игра");
         Deliver(android, names, Directory.Exists(Path.GetDirectoryName(Path.GetFullPath(QuestBuildDir))) ? Path.GetFullPath(QuestBuildDir) : null, "Quest");
+        Deliver(windows, names, Path.GetFullPath(BuiltinDir), "в мод (зашиваются в DLL)");
     }
 
     private static void Build(string dir, List<AssetBundleBuild> builds, BuildTarget target)

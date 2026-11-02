@@ -1,5 +1,6 @@
 using Il2CppInterop.Runtime;
 using MelonLoader.Utils;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -32,7 +33,8 @@ namespace Skins
     }
 
     /// <summary>
-    /// Скины из UserData\Skins\*.skin. Каждый файл — AssetBundle (собирается в Unity\, Tools → Skins → Build),
+    /// Скины из UserData\Skins\*.skin (зашитые в мод — Skins\Builtin — выкладываются туда же).
+    /// Каждый файл — AssetBundle (собирается в Unity\, Tools → Skins → Build All),
     /// внутри префабы, названные ключом класса: KOBOLD.prefab — модель для Kobold, SCARAB.prefab — для Scarab.
     /// Бандл грузится через ICall, как в Ballista и CustomMap (обычный AssetBundle.LoadFromFile в
     /// Il2Cpp-сборке игры недоступен). Модель класса ищется по имени ассета, а не по списку
@@ -41,6 +43,7 @@ namespace Skins
     internal static class SkinLibrary
     {
         internal const string Extension = ".skin";
+        private const string BuiltinPrefix = "Skins.Builtin.";   // LogicalName ресурсов в .csproj
 
         private delegate IntPtr LoadFromFileDelegate(ref ManagedSpanWrapper path, uint crc, ulong offset);
         private delegate IntPtr LoadAssetDelegate(IntPtr self, ref ManagedSpanWrapper name, IntPtr type);
@@ -116,6 +119,7 @@ namespace Skins
             _bundles = new List<Bundle>();
 
             Directory.CreateDirectory(Folder);
+            ExtractBuiltin();
             foreach (string path in Directory.GetFiles(Folder, "*" + Extension).OrderBy(p => p, StringComparer.OrdinalIgnoreCase))
             {
                 try
@@ -130,6 +134,37 @@ namespace Skins
             }
             Core.Log.Msg($"Файлов скинов: {_bundles.Count} ({Folder})");
             return _bundles;
+        }
+
+        /// <summary>
+        /// Скины, зашитые в DLL (Skins\Builtin\*.skin), — в папку скинов: мод ставится одним файлом.
+        /// Unity грузит бандл только с диска. Файл переписывается, если он устарел (новая версия мода).
+        /// </summary>
+        private static void ExtractBuiltin()
+        {
+            Assembly asm = Assembly.GetExecutingAssembly();
+            foreach (string resource in asm.GetManifestResourceNames())
+            {
+                if (!resource.StartsWith(BuiltinPrefix, StringComparison.Ordinal)) continue;
+                string path = Path.Combine(Folder, resource.Substring(BuiltinPrefix.Length));
+                try
+                {
+                    byte[] bytes;
+                    using (Stream res = asm.GetManifestResourceStream(resource))
+                    using (var ms = new MemoryStream())
+                    {
+                        res.CopyTo(ms);
+                        bytes = ms.ToArray();
+                    }
+                    if (File.Exists(path) && File.ReadAllBytes(path).AsSpan().SequenceEqual(bytes)) continue;
+                    File.WriteAllBytes(path, bytes);
+                    Core.Log.Msg($"Скин из мода выложен: {Path.GetFileName(path)}");
+                }
+                catch (Exception e)
+                {
+                    Core.Log.Error($"Скин из мода '{Path.GetFileName(path)}': {e.Message}");
+                }
+            }
         }
 
         private static Bundle Load(string path)
