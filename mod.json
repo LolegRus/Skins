@@ -1,0 +1,27 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Lauriethefish/QuestPatcher.QMod/refs/heads/main/QuestPatcher.QMod/Resources/qmod.schema.json",
+  "_QPVersion": "1.0.0",
+  "name": "Skins",
+  "id": "skins",
+  "modloader": "Scotland2",
+  "author": "LolegRus",
+  "version": "0.1.0",
+  "packageId": "org.VRDojo.Dust",
+  "packageVersion": "0.8.3",
+  "description": "Your own models for DUST characters, like a cowboy Kobold. Menu: left stick. Players with the mod see your skin.",
+  "dependencies": [],
+  "modFiles": [],
+  "lateModFiles": [
+    "libskins.so"
+  ],
+  "libraryFiles": [
+    "libflamingo.so"
+  ],
+  "fileCopies": [
+    {
+      "name": "Cowboy.skin",
+      "destination": "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/Cowboy.skin"
+    }
+  ],
+  "copyExtensions": []
+}
