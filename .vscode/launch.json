@@ -1,0 +1,11 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // Start DUST, then press F5 and select the Dust.exe process.
+      "name": "Attach to Dust (MelonLoader)",
+      "type": "coreclr",
+      "request": "attach"
+    }
+  ]
+}

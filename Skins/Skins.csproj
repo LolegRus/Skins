@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<AssemblyName>Skins</AssemblyName>
+		<RootNamespace>Skins</RootNamespace>
+		<AssemblyVersion>0.1.0.0</AssemblyVersion>
+		<FileVersion>0.1.0.0</FileVersion>
+		<NeutralLanguage>en-US</NeutralLanguage>
+		<LangVersion>latest</LangVersion>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>disable</Nullable>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<IsPackable>false</IsPackable>
+		<Platforms>AnyCPU;x64</Platforms>
+		<!-- Игра 64-битная; не менять, иначе MSB3270 -->
+		<PlatformTarget>x64</PlatformTarget>
+		<!-- Компилируются только файлы из списка ниже -->
+		<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+		<!-- Папка игры; переопределяется: dotnet build -p:DustPath="..." или переменной окружения DustPath -->
+		<DustPath Condition="'$(DustPath)' == ''">C:\Users\loleg\Desktop\DUST\Dust 0.8.3</DustPath>
+	</PropertyGroup>
+
+	<!-- Сборки игры и MelonLoader в bin не копировать: они уже есть в игре -->
+	<ItemDefinitionGroup>
+		<Reference>
+			<Private>false</Private>
+		</Reference>
+	</ItemDefinitionGroup>
+
+	<!-- Ссылки на игру: все Il2Cpp-сборки, которые сгенерировал MelonLoader, + сам MelonLoader -->
+	<ItemGroup>
+		<Reference Include="$(DustPath)\MelonLoader\Il2CppAssemblies\*.dll" />
+		<Reference Include="$(DustPath)\MelonLoader\net6\MelonLoader.dll" />
+		<Reference Include="$(DustPath)\MelonLoader\net6\0Harmony.dll" />
+		<Reference Include="$(DustPath)\MelonLoader\net6\Il2CppInterop.Runtime.dll" />
+		<Reference Include="$(DustPath)\MelonLoader\net6\Il2CppInterop.Common.dll" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Include="Core.cs" />
+	</ItemGroup>
+
+	<!-- После сборки DLL копируется в папку Mods игры -->
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+		<Exec Command="COPY &quot;$(TargetPath)&quot; &quot;$(DustPath)\Mods&quot;" />
+	</Target>
+
+</Project>
