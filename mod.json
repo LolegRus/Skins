@@ -21,6 +21,10 @@
     {
       "name": "Cowboy.skin",
       "destination": "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/Cowboy.skin"
+    },
+    {
+      "name": "Dark Knight.skin",
+      "destination": "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/Dark Knight.skin"
     }
   ],
   "copyExtensions": []
