@@ -1520,7 +1520,7 @@ bool Init() {
 
 extern "C" __attribute__((visibility("default"))) void setup(CModInfo* info) {
   info->id = "skins";
-  info->version = "0.1.0";
+  info->version = "0.2.0";
   info->version_long = 0;
 }
 
