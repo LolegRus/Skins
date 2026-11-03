@@ -73,7 +73,6 @@
 
 > На Quest меню открывается нажатием **левого стика**: над левой рукой появится список классов.
 > Наведи правый контроллер на `<` или `>` у класса и нажми курок. Скины Cowboy, Dark Knight, Enforcer, Gear и Code Breaker уже лежат в моде.
-> Не ставь этот мод вместе с **Time Control** для Quest — у него тоже левый стик.
 
 ## Сборка из исходников
 
@@ -159,7 +158,6 @@ The mod also works on the Quest headset on its own. You only need a computer onc
 
 > On Quest, press the **left stick** to open the menu: a list of classes shows up above your left hand.
 > Point the right controller at `<` or `>` next to a class and pull the trigger. The Cowboy, Dark Knight, Enforcer, Gear and Code Breaker skins come with the mod.
-> Don't install it together with **Time Control** for Quest — it uses the left stick too.
 
 ## Building from source
 
