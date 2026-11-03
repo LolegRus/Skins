@@ -17,7 +17,7 @@
 <summary>Подробнее</summary>
 
 - Скины — это файлы `.skin` в папке игры `UserData\Skins`. Положи туда файл, и скин появится в списке.
-  Скин **Cowboy** для Kobold идёт вместе с модом и появится там сам.
+  Скины **Cowboy** для Kobold и **Dark Knight** для Sparrow идут вместе с модом и появятся там сами.
 - Чтобы другой игрок увидел твой скин, у него должен стоять этот мод и лежать тот же файл скина.
   Игроки без мода видят обычного персонажа — играть вместе это не мешает.
 - Сделать свой скин можно в Unity-проекте `Unity\` этого репозитория: положи модель в
@@ -70,7 +70,7 @@
 
 
 > На Quest меню открывается нажатием **левого стика**: над левой рукой появится список классов.
-> Наведи правый контроллер на `<` или `>` у класса и нажми курок. Скин Cowboy уже лежит в моде.
+> Наведи правый контроллер на `<` или `>` у класса и нажми курок. Скины Cowboy и Dark Knight уже лежат в моде.
 > Не ставь этот мод вместе с **Time Control** для Quest — у него тоже левый стик.
 
 ## Сборка из исходников
@@ -101,7 +101,7 @@ dotnet build Skins/Skins.csproj -c Release -p:DustPath="D:\Games\Dust 0.8.3"
 <summary>More details</summary>
 
 - Skins are `.skin` files in the game's `UserData\Skins` folder. Drop a file there and the skin shows up in the list.
-  The **Cowboy** skin for Kobold comes with the mod and shows up there by itself.
+  The **Cowboy** skin for Kobold and the **Dark Knight** skin for Sparrow come with the mod and show up there by themselves.
 - For another player to see your skin, they need this mod and the same skin file.
   Players without the mod see the normal character — you can still play together.
 - You can make your own skin in the `Unity\` project of this repository: put the model into
@@ -154,7 +154,7 @@ The mod also works on the Quest headset on its own. You only need a computer onc
 
 
 > On Quest, press the **left stick** to open the menu: a list of classes shows up above your left hand.
-> Point the right controller at `<` or `>` next to a class and pull the trigger. The Cowboy skin comes with the mod.
+> Point the right controller at `<` or `>` next to a class and pull the trigger. The Cowboy and Dark Knight skins come with the mod.
 > Don't install it together with **Time Control** for Quest — it uses the left stick too.
 
 ## Building from source
