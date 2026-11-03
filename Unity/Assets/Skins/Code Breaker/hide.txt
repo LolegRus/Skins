@@ -1,0 +1,11 @@
+# Детали игры, которые этот скин прячет, — по одной на строку (имена как в дампе мода).
+Witch Hat
+Offhand.001
+Offhand.002
+Offhand.003
+Charging Handle Greeble
+Barrel Centre Support
+Barrel Lower
+Shroud Lower
+Rail
+Side Nubbins

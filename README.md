@@ -17,8 +17,8 @@
 <summary>Подробнее</summary>
 
 - Скины — это файлы `.skin` в папке игры `UserData\Skins`. Положи туда файл, и скин появится в списке.
-  Скины **Cowboy** для Kobold, **Dark Knight** для Sparrow, **Enforcer** для Roller и **Gear** для Reaper идут вместе с модом и появятся там сами.
-- Kobold, Sparrow, Roller, Reaper и другие классы, кроме Scarab и Drone, — для VR. На ПК их нет в меню,
+  Скины **Cowboy** для Kobold, **Dark Knight** для Sparrow, **Enforcer** для Roller, **Gear** для Reaper и **Code Breaker** для Seraph идут вместе с модом и появятся там сами.
+- Kobold, Sparrow, Roller, Reaper, Seraph и другие классы, кроме Scarab и Drone, — для VR. На ПК их нет в меню,
   но их скины ты увидишь на игроках в шлеме, у которых стоит мод.
 - Чтобы другой игрок увидел твой скин, у него должен стоять этот мод и лежать тот же файл скина.
   Игроки без мода видят обычного персонажа — играть вместе это не мешает.
@@ -72,7 +72,7 @@
 
 
 > На Quest меню открывается нажатием **левого стика**: над левой рукой появится список классов.
-> Наведи правый контроллер на `<` или `>` у класса и нажми курок. Скины Cowboy, Dark Knight, Enforcer и Gear уже лежат в моде.
+> Наведи правый контроллер на `<` или `>` у класса и нажми курок. Скины Cowboy, Dark Knight, Enforcer, Gear и Code Breaker уже лежат в моде.
 > Не ставь этот мод вместе с **Time Control** для Quest — у него тоже левый стик.
 
 ## Сборка из исходников
@@ -103,8 +103,8 @@ dotnet build Skins/Skins.csproj -c Release -p:DustPath="D:\Games\Dust 0.8.3"
 <summary>More details</summary>
 
 - Skins are `.skin` files in the game's `UserData\Skins` folder. Drop a file there and the skin shows up in the list.
-  The **Cowboy** skin for Kobold, the **Dark Knight** skin for Sparrow, the **Enforcer** skin for Roller and the **Gear** skin for Reaper come with the mod and show up there by themselves.
-- Kobold, Sparrow, Roller, Reaper and the other classes except Scarab and Drone are for VR. On PC they are not in the menu,
+  The **Cowboy** skin for Kobold, the **Dark Knight** skin for Sparrow, the **Enforcer** skin for Roller, the **Gear** skin for Reaper and the **Code Breaker** skin for Seraph come with the mod and show up there by themselves.
+- Kobold, Sparrow, Roller, Reaper, Seraph and the other classes except Scarab and Drone are for VR. On PC they are not in the menu,
   but you see their skins on headset players who have the mod.
 - For another player to see your skin, they need this mod and the same skin file.
   Players without the mod see the normal character — you can still play together.
@@ -158,7 +158,7 @@ The mod also works on the Quest headset on its own. You only need a computer onc
 
 
 > On Quest, press the **left stick** to open the menu: a list of classes shows up above your left hand.
-> Point the right controller at `<` or `>` next to a class and pull the trigger. The Cowboy, Dark Knight, Enforcer and Gear skins come with the mod.
+> Point the right controller at `<` or `>` next to a class and pull the trigger. The Cowboy, Dark Knight, Enforcer, Gear and Code Breaker skins come with the mod.
 > Don't install it together with **Time Control** for Quest — it uses the left stick too.
 
 ## Building from source
