@@ -25,6 +25,10 @@
     {
       "name": "Dark Knight.skin",
       "destination": "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/Dark Knight.skin"
+    },
+    {
+      "name": "Enforcer.skin",
+      "destination": "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/Enforcer.skin"
     }
   ],
   "copyExtensions": []

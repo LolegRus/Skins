@@ -10,7 +10,8 @@
 // Путь — от корня класса, без его имени: «Anchors/Head Anchor/Head».
 //
 // Меню — нажатие левого стика (как у TimeControl — вместе их не ставить): панель над левой рукой,
-// у каждого класса со скинами «< скин >», наведи правый контроллер и жми курок. Выбор пишется в
+// у каждого VR-класса со скинами «< скин >» (Scarab и Drone — только ПК, их в меню нет),
+// наведи правый контроллер и жми курок. Выбор пишется в
 // kSkinDir/skins.cfg («KOBOLD=Cowboy», пусто — родной вид); без строки — первый скин класса.
 // Свой класс — CombatClass, у которого в имени объекта «Local» («Kobold (Local) Variant(Clone)»,
 // «Grappler Local Variant(Clone)»), ключ класса — первые буквы имени.
@@ -419,6 +420,9 @@ Il2CppObject* FindFirst(Il2CppObject* type) {
 // Ключи классов игры (у ПК-версии они из реестра классов; на Quest — по дампу ПК)
 char const* const kClassKeys[] = {"ASSASSIN", "BOULDER", "CROSSBOLT", "GOLEM", "GRAPPLER", "JACKET", "KOBOLD",
                                   "REAPER",   "ROLLER",  "SCARAB",    "SERAPH", "SPARROW", "STYX"};
+
+// Классы только для ПК: в меню их нет, скины нужны, чтобы видеть их на ПК-игроках
+bool IsPcClass(std::string const& key) { return key == "SCARAB" || key == "DRONE"; }
 
 struct SkinFile {
   std::string name;  // имя файла без .skin — так скин зовут в skins.cfg и в сети
@@ -1094,12 +1098,12 @@ std::string Title(std::string const& key) {
 
 std::string Mark(std::string const& s, bool on) { return on ? "<mark=#FFFFFF50>" + s + "</mark>" : s; }
 
-// Строки меню: классы со скинами, свой класс — первым
+// Строки меню: VR-классы со скинами, свой класс — первым
 void RefreshRows() {
   gRows.clear();
   if (!gLocal.key.empty()) gRows.push_back(gLocal.key);
   for (auto key : kClassKeys)
-    if (key != gLocal.key && !SkinsFor(key).empty()) gRows.push_back(key);
+    if (key != gLocal.key && !IsPcClass(key) && !SkinsFor(key).empty()) gRows.push_back(key);
 }
 
 void UpdateTexts() {
