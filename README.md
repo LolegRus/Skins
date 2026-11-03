@@ -1,6 +1,6 @@
 # Skins
 
-![DUST](https://img.shields.io/badge/DUST-0.8.3-1f6feb) ![MelonLoader](https://img.shields.io/badge/MelonLoader-0.7.x-8957e5) ![.NET](https://img.shields.io/badge/.NET-6.0-512bd4) ![Version](https://img.shields.io/badge/version-0.4.0-2ea043)
+![DUST](https://img.shields.io/badge/DUST-0.8.4-1f6feb) ![MelonLoader](https://img.shields.io/badge/MelonLoader-0.7.x-8957e5) ![.NET](https://img.shields.io/badge/.NET-6.0-512bd4) ![Version](https://img.shields.io/badge/version-0.4.0-2ea043)
 
 **🇬🇧 English version is below — [jump to English](#english)**
 
@@ -80,7 +80,7 @@
 Если игра лежит не в папке по умолчанию, укажи, где она:
 
 ```
-dotnet build Skins/Skins.csproj -c Release -p:DustPath="D:\Games\Dust 0.8.3"
+dotnet build Skins/Skins.csproj -c Release -p:DustPath="D:\Games\Dust 0.8.4"
 ```
 
 Готовая DLL сама скопируется в папку игры `Mods`.
@@ -165,7 +165,7 @@ Only needed if you want to change the code. You need the .NET SDK (6.0 or newer)
 If the game is not in the default folder, tell the build where it is:
 
 ```
-dotnet build Skins/Skins.csproj -c Release -p:DustPath="D:\Games\Dust 0.8.3"
+dotnet build Skins/Skins.csproj -c Release -p:DustPath="D:\Games\Dust 0.8.4"
 ```
 
 The finished DLL is copied into the game's `Mods` folder by itself.

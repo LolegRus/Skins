@@ -39,7 +39,7 @@ public static class SkinBuilder
     private const string DumpDir = "ClassDumps";   // дампы классов из игры (KOBOLD.prefab.txt)
     private const string HideFile = "hide.txt";    // детали игры, которые скин прячет, — по одной на строку
     private const string FittedDir = "_build";     // подогнанные меши и плоские префабы — генерируются
-    private const string DefaultDustPath = @"C:\Users\loleg\Desktop\DUST\Dust 0.8.3";
+    private const string DefaultDustPath = @"C:\Users\loleg\Desktop\DUST\Dust 0.8.4";
     private const string QuestBuildDir = @"..\..\Quest mods\Skins\build";
     private const string BuiltinDir = @"..\Skins\Builtin";   // скины, которые идут с ПК-модом (EmbeddedResource)
     private const string OwnMaterialPrefix = "Own";

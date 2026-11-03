@@ -18,7 +18,7 @@
 		<!-- Компилируются только файлы из списка ниже -->
 		<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
 		<!-- Папка игры; переопределяется: dotnet build -p:DustPath="..." или переменной окружения DustPath -->
-		<DustPath Condition="'$(DustPath)' == ''">C:\Users\loleg\Desktop\DUST\Dust 0.8.3</DustPath>
+		<DustPath Condition="'$(DustPath)' == ''">C:\Users\loleg\Desktop\DUST\Dust 0.8.4</DustPath>
 	</PropertyGroup>
 
 	<!-- Сборки игры и MelonLoader в bin не копировать: они уже есть в игре -->
