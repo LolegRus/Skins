@@ -3,7 +3,7 @@ using MelonLoader;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-[assembly: MelonInfo(typeof(Skins.Core), "Skins", "0.1.0", "LolegRus", null)]
+[assembly: MelonInfo(typeof(Skins.Core), "Skins", "0.2.0", "LolegRus", null)]
 [assembly: MelonGame("VRDojo", "Dust")]
 
 namespace Skins
