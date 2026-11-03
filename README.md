@@ -9,15 +9,17 @@
 ## Что умеет
 
 - **Новый вид** — меняет модель твоего персонажа на скин из файла
-- **Свой скин для каждого класса** — в меню видны все классы, мод запоминает выбор и надевает его сам
+- **Свой скин для каждого класса** — в меню видны классы для ПК (Scarab и Drone), мод запоминает выбор и надевает его сам
 - **Цвета игры остаются** — цвет команды, вспышка от попадания и оружие работают как раньше
-- **Видно другим** — игроки с этим модом видят твой скин, а ты — их
+- **Видно другим** — игроки с этим модом видят твой скин, а ты — их, и на ПК, и на Quest
 
 <details>
 <summary>Подробнее</summary>
 
 - Скины — это файлы `.skin` в папке игры `UserData\Skins`. Положи туда файл, и скин появится в списке.
-  Скины **Cowboy** для Kobold и **Dark Knight** для Sparrow идут вместе с модом и появятся там сами.
+  Скины **Cowboy** для Kobold, **Dark Knight** для Sparrow и **Enforcer** для Roller идут вместе с модом и появятся там сами.
+- Kobold, Sparrow, Roller и другие классы, кроме Scarab и Drone, — для VR. На ПК их нет в меню,
+  но их скины ты увидишь на игроках в шлеме, у которых стоит мод.
 - Чтобы другой игрок увидел твой скин, у него должен стоять этот мод и лежать тот же файл скина.
   Игроки без мода видят обычного персонажа — играть вместе это не мешает.
 - Сделать свой скин можно в Unity-проекте `Unity\` этого репозитория: положи модель в
@@ -70,7 +72,7 @@
 
 
 > На Quest меню открывается нажатием **левого стика**: над левой рукой появится список классов.
-> Наведи правый контроллер на `<` или `>` у класса и нажми курок. Скины Cowboy и Dark Knight уже лежат в моде.
+> Наведи правый контроллер на `<` или `>` у класса и нажми курок. Скины Cowboy, Dark Knight и Enforcer уже лежат в моде.
 > Не ставь этот мод вместе с **Time Control** для Quest — у него тоже левый стик.
 
 ## Сборка из исходников
@@ -93,15 +95,17 @@ dotnet build Skins/Skins.csproj -c Release -p:DustPath="D:\Games\Dust 0.8.3"
 ## What it does
 
 - **New look** — swaps your character's model for a skin from a file
-- **A skin for every class** — the menu shows all classes, the mod remembers your pick and puts it on by itself
+- **A skin for every class** — the menu shows the PC classes (Scarab and Drone), the mod remembers your pick and puts it on by itself
 - **Game colors stay** — team color, the hit flash and the weapons work just like before
-- **Others see it** — players with this mod see your skin, and you see theirs
+- **Others see it** — players with this mod see your skin, and you see theirs, both on PC and on Quest
 
 <details>
 <summary>More details</summary>
 
 - Skins are `.skin` files in the game's `UserData\Skins` folder. Drop a file there and the skin shows up in the list.
-  The **Cowboy** skin for Kobold and the **Dark Knight** skin for Sparrow come with the mod and show up there by themselves.
+  The **Cowboy** skin for Kobold, the **Dark Knight** skin for Sparrow and the **Enforcer** skin for Roller come with the mod and show up there by themselves.
+- Kobold, Sparrow, Roller and the other classes except Scarab and Drone are for VR. On PC they are not in the menu,
+  but you see their skins on headset players who have the mod.
 - For another player to see your skin, they need this mod and the same skin file.
   Players without the mod see the normal character — you can still play together.
 - You can make your own skin in the `Unity\` project of this repository: put the model into
@@ -154,7 +158,7 @@ The mod also works on the Quest headset on its own. You only need a computer onc
 
 
 > On Quest, press the **left stick** to open the menu: a list of classes shows up above your left hand.
-> Point the right controller at `<` or `>` next to a class and pull the trigger. The Cowboy and Dark Knight skins come with the mod.
+> Point the right controller at `<` or `>` next to a class and pull the trigger. The Cowboy, Dark Knight and Enforcer skins come with the mod.
 > Don't install it together with **Time Control** for Quest — it uses the left stick too.
 
 ## Building from source

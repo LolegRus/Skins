@@ -83,7 +83,8 @@ namespace Skins
             if (_class != null && KeyOf(_class) == key) Wear(_class, skinName ?? Original);
         }
 
-        internal string Selected(string key) => Entry(key).Value;
+        /// <summary>Выбранный скин класса. Свой скин — только у ПК-классов: VR-классы на ПК в родном виде.</summary>
+        internal string Selected(string key) => Game.IsPcClass(key) ? Entry(key).Value : Original;
 
         private void Wear(CombatClass cc, string skinName)
         {

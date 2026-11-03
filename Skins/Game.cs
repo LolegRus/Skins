@@ -12,6 +12,14 @@ namespace Skins
     /// <summary>Поиск игрока, его класса и префабов классов в реестре (как в Ballista).</summary>
     internal static class Game
     {
+        /// <summary>
+        /// Классы, за которые играют на ПК. Остальные — VR-классы: на ПК их скины нужны только для того,
+        /// чтобы видеть их на игроках в шлеме (Quest и ПК-VR).
+        /// </summary>
+        private static readonly HashSet<string> PcClasses = new(StringComparer.OrdinalIgnoreCase) { "SCARAB", "DRONE" };
+
+        internal static bool IsPcClass(string key) => PcClasses.Contains(key);
+
         /// <summary>Игрок, которому принадлежит камера (чужие игроки тоже несут компонент Player).</summary>
         internal static Player FindLocalPlayer()
         {

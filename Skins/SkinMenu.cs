@@ -4,16 +4,13 @@ using UnityEngine.InputSystem;
 namespace Skins
 {
     /// <summary>
-    /// Меню скинов слева сверху (F2): все классы игры, у каждого — выбранный скин.
+    /// Меню скинов слева сверху (F2): ПК-классы игры (Game.IsPcClass), у каждого — выбранный скин.
     /// ↑/↓ — класс, ←/→ — скин (после последнего — родной вид). Скин текущего класса надевается сразу,
     /// для остальных выбор запоминается и надевается при появлении за этот класс.
     /// Вид — как у меню SandboxTools (те же цвета и скруглённая панель).
     /// </summary>
     internal sealed class SkinMenu
     {
-        // Не игровые классы: дрон наблюдателя.
-        private static readonly HashSet<string> Hidden = new(StringComparer.OrdinalIgnoreCase) { "DRONE" };
-
         private static readonly Color ColPanel = new Color(0.059f, 0.086f, 0.149f, 0.95f);
         private static readonly Color ColSelected = new Color(0.13f, 0.36f, 0.42f, 1f);
         private static readonly Color ColAccent = new Color(0.24f, 0.90f, 0.85f, 1f);
@@ -39,7 +36,7 @@ namespace Skins
             Open = !Open;
             if (!Open) return;
 
-            _classes = Game.ClassPrefabs().Select(c => c.key.ToUpperInvariant()).Where(k => !Hidden.Contains(k)).Distinct().ToList();
+            _classes = Game.ClassPrefabs().Select(c => c.key.ToUpperInvariant()).Where(Game.IsPcClass).Distinct().ToList();
             string current = _core.CurrentKey;
             int i = current != null ? _classes.IndexOf(current) : -1;
             _row = i >= 0 ? i : Mathf.Clamp(_row, 0, Math.Max(0, _classes.Count - 1));
