@@ -7,7 +7,7 @@
   "author": "LolegRus",
   "version": "0.4.0",
   "packageId": "org.VRDojo.Dust",
-  "packageVersion": "0.8.3",
+  "packageVersion": "0.8.4",
   "description": "Your own models for DUST characters, like a cowboy Kobold. Menu: left stick. Players with the mod see your skin.",
   "dependencies": [],
   "modFiles": [],
