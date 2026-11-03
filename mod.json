@@ -33,6 +33,10 @@
     {
       "name": "Gear.skin",
       "destination": "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/Gear.skin"
+    },
+    {
+      "name": "Code Breaker.skin",
+      "destination": "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/Code Breaker.skin"
     }
   ],
   "copyExtensions": []
