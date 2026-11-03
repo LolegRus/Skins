@@ -29,6 +29,10 @@
     {
       "name": "Enforcer.skin",
       "destination": "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/Enforcer.skin"
+    },
+    {
+      "name": "Gear.skin",
+      "destination": "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/Gear.skin"
     }
   ],
   "copyExtensions": []
