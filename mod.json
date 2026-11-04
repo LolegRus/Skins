@@ -45,6 +45,10 @@
     {
       "name": "Hound.skin",
       "destination": "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/Hound.skin"
+    },
+    {
+      "name": "Sunset.skin",
+      "destination": "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/Sunset.skin"
     }
   ],
   "copyExtensions": []

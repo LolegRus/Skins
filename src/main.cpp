@@ -272,6 +272,13 @@ Quat operator*(Quat a, Quat b) {
           a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w, a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z};
 }
 Quat Conj(Quat q) { return {-q.x, -q.y, -q.z, q.w}; }
+Vec3 Lerp(Vec3 a, Vec3 b, float t) { return a + (b - a) * t; }
+Quat Nlerp(Quat a, Quat b, float t) {
+  if (a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w < 0.f) b = {-b.x, -b.y, -b.z, -b.w};
+  Quat q{a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t, a.w + (b.w - a.w) * t};
+  float len = std::sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
+  return len > 1e-6f ? Quat{q.x / len, q.y / len, q.z / len, q.w / len} : a;
+}
 Vec3 Rotate(Quat q, Vec3 v) {
   Vec3 u{q.x, q.y, q.z};
   Vec3 t = Cross(u, v) * 2.f;
@@ -330,6 +337,16 @@ MethodInfo const* gSetRotation;
 MethodInfo const* gSetLocalPosition;
 MethodInfo const* gSetLocalScale;
 MethodInfo const* gGetLossyScale;
+// Детали скина, которые ездят вместе с анимацией игры (ребёнок «@end»): поза узла и время анимации
+MethodInfo const* gGetLocalPosition;
+MethodInfo const* gGetLocalRotation;
+MethodInfo const* gSetLocalRotation;
+MethodInfo const* gGetLocalScale;
+Il2CppObject* gScalarAnimType;  // Dust.ScalarProceduralAnimation
+size_t gCurrentTimeOffset;      // его поле currentTime (0…1)
+// Брошенные снаряды класса (колесо Crossbolt) лежат не внутри него: находим по ProjectileTeleporter.teleportProjectile
+Il2CppObject* gTeleporterType;
+size_t gTeleportProjectileOffset;
 MethodInfo const* gGetMainCamera;
 MethodInfo const* gGetSharedMesh;
 MethodInfo const* gSetSharedMesh;
@@ -566,6 +583,14 @@ struct Extra {
   std::vector<Held> renderers;
   Il2CppObject* applied = nullptr;
 };
+// Новая деталь с ребёнком «@end»: ездит между своей позой и позой «@end» по анимации игры у предка
+struct Moving {
+  Held part;    // Transform копии
+  Held driver;  // ScalarProceduralAnimation
+  Vec3 startPos, endPos;
+  Quat startRot, endRot;
+  float full = 1.f;  // currentTime, при котором деталь доходит до «@end» («@end 0.3»: отдача арбалета доводит его до ~0.3–0.4)
+};
 // Скин на одном экземпляре класса — своём или чужом
 struct Applied {
   Held cls;          // GameObject класса
@@ -573,6 +598,7 @@ struct Applied {
   std::string skin;  // "" — родной вид
   std::vector<Swap> swaps;
   std::vector<Extra> extras;
+  std::vector<Moving> moving;
   bool reportedRestore = false;
   std::string net = "\x01";  // у чужого класса — последнее прочитанное из сети («» — родной вид; \x01 — ещё ничего)
 };
@@ -596,8 +622,13 @@ void Strip(Applied& a, bool restore) {
     Free(e.source);
     for (auto& r : e.renderers) Free(r);
   }
+  for (auto& m : a.moving) {
+    Free(m.part);
+    Free(m.driver);
+  }
   a.swaps.clear();
   a.extras.clear();
+  a.moving.clear();
   a.reportedRestore = false;
   a.skin.clear();
 }
@@ -615,6 +646,27 @@ void Index(Il2CppObject* t, std::string const& prefix, std::unordered_map<std::s
     std::string path = prefix.empty() ? NameOf(c) : prefix + "/" + NameOf(c);
     out.emplace(path, c);
     Index(c, path, out);
+  }
+}
+
+// Снаряды, которые класс бросает (колесо Crossbolt «03_BIGWHEEL (Projectile)»), во время игры лежат не внутри
+// класса: берём их по ссылке ProjectileTeleporter.teleportProjectile из узлов класса и добавляем под их именем
+void IndexProjectiles(Il2CppObject* root, std::unordered_map<std::string, Il2CppObject*>& nodes) {
+  if (!gTeleporterType) return;
+  std::vector<Il2CppObject*> found;
+  for (auto const& [p, t] : nodes) {
+    auto teleporter = Component(GameObjectOf(t), gTeleporterType);
+    if (!teleporter) continue;
+    auto projectile = *reinterpret_cast<Il2CppObject**>(reinterpret_cast<char*>(teleporter) + gTeleportProjectileOffset);
+    if (Alive(projectile)) found.push_back(Call<Il2CppObject*>(gComponentTransform, projectile));
+  }
+  for (auto t : found) {
+    bool inside = false;
+    for (auto p = Call<Il2CppObject*>(gGetParent, t); p && !inside; p = Call<Il2CppObject*>(gGetParent, p))
+      inside = p == root;
+    std::string name = NameOf(t);
+    if (inside || !nodes.emplace(name, t).second) continue;
+    Index(t, name, nodes);
   }
 }
 
@@ -661,6 +713,69 @@ void SyncExtra(Extra& e) {
   e.applied = m;
 }
 
+bool CanMove() {
+  return gScalarAnimType && gGetLocalPosition && gGetLocalRotation && gSetLocalRotation && gGetLocalScale &&
+         gSetLocalPosition;
+}
+
+// Деталь copy с ребёнком «@end» ездит по анимации ближайшего к node предка (до корня класса root)
+void AddMoving(Applied& a, Il2CppObject* copy, Il2CppObject* node, Il2CppObject* root) {
+  auto part = TransformOf(copy);
+  Il2CppObject* end = nullptr;
+  std::string endName;
+  for (int i = 0, n = ChildCount(part); i < n && !end; i++)
+    if (auto c = Child(part, i)) {
+      std::string name = NameOf(c);
+      if (name == "@end" || name.rfind("@end ", 0) == 0) {
+        end = c;
+        endName = name;
+      }
+    }
+  if (!end) return;
+  float full = 1.f;
+  if (endName.size() > 5) {
+    full = std::strtof(endName.c_str() + 5, nullptr);
+    if (!(full > 0.f)) {
+      LOG(ANDROID_LOG_WARN, "'%s': в «%s» не число больше 0 — конец при 1", NameOf(copy).c_str(), endName.c_str());
+      full = 1.f;
+    }
+  }
+  if (!CanMove()) {
+    LOG(ANDROID_LOG_WARN, "'%s': движение деталей не поддержано (нет API) — стоит на месте", NameOf(copy).c_str());
+    return;
+  }
+  Il2CppObject* driver = nullptr;
+  for (auto t = node; t && !driver; t = Call<Il2CppObject*>(gGetParent, t)) {
+    driver = Component(GameObjectOf(t), gScalarAnimType);
+    if (t == root) break;
+  }
+  if (!driver) {
+    LOG(ANDROID_LOG_WARN, "'%s': над '%s' нет анимации игры — деталь стоит на месте", NameOf(copy).c_str(),
+        NameOf(node).c_str());
+    return;
+  }
+  Moving m;
+  m.part = Hold(part);
+  m.driver = Hold(driver);
+  m.startPos = Call<Vec3>(gGetLocalPosition, part);
+  m.startRot = Call<Quat>(gGetLocalRotation, part);
+  Vec3 s = Call<Vec3>(gGetLocalScale, part), e = Call<Vec3>(gGetLocalPosition, end);
+  m.endPos = m.startPos + Rotate(m.startRot, Vec3{s.x * e.x, s.y * e.y, s.z * e.z});
+  m.endRot = m.startRot * Call<Quat>(gGetLocalRotation, end);
+  m.full = full;
+  a.moving.push_back(std::move(m));
+}
+
+void SyncMoving(Moving& m) {
+  if (!Alive(m.part.obj) || !Alive(m.driver.obj)) return;
+  float t = *reinterpret_cast<float*>(reinterpret_cast<char*>(m.driver.obj) + gCurrentTimeOffset) / m.full;
+  t = t < 0.f ? 0.f : t > 1.f ? 1.f : t;
+  Vec3 p = Lerp(m.startPos, m.endPos, t);
+  Quat r = Nlerp(m.startRot, m.endRot, t);
+  Call<void>(gSetLocalPosition, m.part.obj, p);
+  Call<void>(gSetLocalRotation, m.part.obj, r);
+}
+
 // Надеть скин skinName на класс a (он уже держит cls и key); "" — родной вид
 void Wear(Applied& a, std::string const& skinName, char const* owner) {
   Strip(a, true);
@@ -675,6 +790,7 @@ void Wear(Applied& a, std::string const& skinName, char const* owner) {
   auto root = TransformOf(a.cls.obj);
   std::unordered_map<std::string, Il2CppObject*> nodes;
   Index(root, "", nodes);
+  IndexProjectiles(root, nodes);
 
   auto skinRoot = TransformOf(PrefabFor(*skin, a.key));
   std::vector<std::string> missing;
@@ -706,6 +822,7 @@ void Wear(Applied& a, std::string const& skinName, char const* owner) {
         SetLayers(TransformOf(copy), layer, e.renderers);
         SyncExtra(e);
         a.extras.push_back(std::move(e));
+        AddMoving(a, copy, node, root);
       }
       continue;
     }
@@ -713,6 +830,11 @@ void Wear(Applied& a, std::string const& skinName, char const* owner) {
     auto filter = Component(GameObjectOf(node), gMeshFilterType);
     if (!filter) {
       missing.push_back(path + " (без MeshFilter)");
+      continue;
+    }
+    // Один меш на деталь: второй путь к ней (поиск по концу пути) сломал бы и вид, и возврат меша игры
+    if (std::any_of(a.swaps.begin(), a.swaps.end(), [&](Swap const& s) { return s.filter.obj == filter; })) {
+      LOG(ANDROID_LOG_WARN, "'%s': меш скина на эту деталь уже стоит — второй пропущен", path.c_str());
       continue;
     }
     auto skinFilter = Component(GameObjectOf(entry), gMeshFilterType);
@@ -756,6 +878,7 @@ bool Sync(Applied& a) {
     a.reportedRestore = true;
   }
   for (auto& e : a.extras) SyncExtra(e);
+  for (auto& m : a.moving) SyncMoving(m);
   return true;
 }
 
@@ -1492,6 +1615,29 @@ bool Init() {
   gRendererType = TypeOf(renderer);
   gGameObjectType = TypeOf(gGameObjectClass);
   gCombatClassType = TypeOf(combatClass);
+
+  // Движущиеся детали (ручки затвора Crossbolt Sunset): без них скин работает, детали просто стоят
+  gGetLocalPosition = Method(transform, "get_localPosition", 0);
+  gGetLocalRotation = Method(transform, "get_localRotation", 0);
+  gSetLocalRotation = Method(transform, "set_localRotation", 1);
+  gGetLocalScale = Method(transform, "get_localScale", 0);
+  if (auto scalar = Class(dust, "Dust", "ScalarProceduralAnimation")) {
+    if (auto field = il2cpp_class_get_field_from_name(scalar, "currentTime")) {
+      gCurrentTimeOffset = il2cpp_field_get_offset(field);
+      gScalarAnimType = TypeOf(scalar);
+    } else {
+      LOG(ANDROID_LOG_ERROR, "нет поля ScalarProceduralAnimation.currentTime");
+    }
+  }
+  // Брошенное колесо Crossbolt: без этого его скин просто не надевается
+  if (auto teleporter = Class(dust, "Dust.Combat", "ProjectileTeleporter")) {
+    if (auto field = il2cpp_class_get_field_from_name(teleporter, "teleportProjectile")) {
+      gTeleportProjectileOffset = il2cpp_field_get_offset(field);
+      gTeleporterType = TypeOf(teleporter);
+    } else {
+      LOG(ANDROID_LOG_ERROR, "нет поля ProjectileTeleporter.teleportProjectile");
+    }
+  }
 
   if (!InitMenu(core)) {
     gMenuFailed = true;
