@@ -253,7 +253,7 @@ public static class SkinBuilder
     /// <param name="restAnchor">Его пара в классе.</param>
     private static void Visit(Ctx ctx, Transform node, Transform anchor, Transform restAnchor)
     {
-        Transform rest = ctx.Index.Resolve(node.name);
+        Transform rest = ctx.Index.Resolve(node);
         var mf = node.GetComponent<MeshFilter>();
         Mesh mesh = mf != null ? mf.sharedMesh : null;
 
@@ -435,7 +435,7 @@ public static class SkinBuilder
         for (int i = 0; i < node.childCount; i++)
         {
             Transform child = node.GetChild(i);
-            Transform rest = ctx.Index.Resolve(child.name);
+            Transform rest = ctx.Index.Resolve(child);
             if (rest != null) yield return (child, rest);
             foreach (var pair in MatchedDescendants(ctx, child)) yield return pair;
         }
@@ -446,7 +446,7 @@ public static class SkinBuilder
     {
         for (Transform p = node.parent; p != null && p != ctx.SkinRoot; p = p.parent)
         {
-            Transform rest = ctx.Index.Resolve(p.name);
+            Transform rest = ctx.Index.Resolve(p);
             if (rest != null) return (p, rest);
         }
         return (null, null);
@@ -511,7 +511,7 @@ public static class SkinBuilder
         {
             var mf = t.GetComponent<MeshFilter>();
             if (t == skinRoot || mf == null || mf.sharedMesh == null) continue;
-            Transform rest = index.Resolve(t.name);
+            Transform rest = index.Resolve(t);
             if (rest == null) continue;
             var path = new List<Transform>();
             for (Transform p = rest.parent; p != null; p = p.parent) path.Insert(0, p);
@@ -582,6 +582,9 @@ public static class SkinBuilder
                 go.transform.localEulerAngles = Vec(m.Groups["lr"].Value);
                 go.transform.localScale = Vec(m.Groups["ls"].Value);
             }
+            // Метка «у узла есть меш»: при повторе имени (у Grappler — «Head», «Right Hand» снаружи и внутри)
+            // меш модели ставится на тот, у которого он есть
+            if (Regex.IsMatch(line, @"::.*\bMeshFilter\b")) go.AddComponent<MeshFilter>();
             stack.RemoveRange(depth, stack.Count - depth);
             stack.Add(go.transform);
         }
@@ -627,10 +630,20 @@ public static class SkinBuilder
             }
         }
 
+        /// <summary>Пара узла модели: у узла с мешем при повторе имени — узел игры с мешем.</summary>
+        internal Transform Resolve(Transform skinNode)
+        {
+            var mf = skinNode.GetComponent<MeshFilter>();
+            return Resolve(skinNode.name, mf != null && mf.sharedMesh != null);
+        }
+
         /// <summary>Точное имя (если одно), затем без префикса LH/RH в своей руке, затем синонимы, затем первое совпадение.</summary>
-        internal Transform Resolve(string name)
+        internal Transform Resolve(string name, bool preferMesh = false)
         {
             if (_nodes.TryGetValue(name, out var exact) && exact.Count == 1) return exact[0];
+            if (exact != null && preferMesh)
+                foreach (Transform t in exact)
+                    if (t.GetComponent<MeshFilter>() != null) return t;
 
             foreach (var (prefix, anchor) in Sides)
             {
