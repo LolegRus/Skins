@@ -37,6 +37,10 @@
     {
       "name": "Code Breaker.skin",
       "destination": "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/Code Breaker.skin"
+    },
+    {
+      "name": "Ninja.skin",
+      "destination": "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/Ninja.skin"
     }
   ],
   "copyExtensions": []
