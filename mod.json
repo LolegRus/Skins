@@ -41,6 +41,10 @@
     {
       "name": "Ninja.skin",
       "destination": "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/Ninja.skin"
+    },
+    {
+      "name": "Hound.skin",
+      "destination": "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/Hound.skin"
     }
   ],
   "copyExtensions": []
