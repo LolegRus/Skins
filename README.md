@@ -25,7 +25,7 @@
 - Сделать свой скин можно в Unity-проекте `Unity\` этого репозитория: положи модель в
   `Assets\Skins\<Имя скина>\KOBOLD.fbx` и нажми **Tools → Skins → Build All**. Объекты в модели называй
   как детали персонажа в игре (`Head`, `Body`, `Left Hand`, `LH Carbine`…), а менять в Blender можно
-  только саму форму, не положение объектов. Чтобы убрать деталь игры (например, шляпу `Witch Hat`),
+  только саму форму, не положение объектов. Чтобы убрать деталь игры (например, `BodyHipSegment`),
   впиши её имя в файл `hide.txt` рядом с моделью. Скин соберётся сразу для ПК и для Quest.
 
 </details>
@@ -110,7 +110,7 @@ dotnet build Skins/Skins.csproj -c Release -p:DustPath="D:\Games\Dust 0.8.4"
 - You can make your own skin in the `Unity\` project of this repository: put the model into
   `Assets\Skins\<Skin name>\KOBOLD.fbx` and press **Tools → Skins → Build All**. Name the objects in the model
   like the character's parts in the game (`Head`, `Body`, `Left Hand`, `LH Carbine`…), and in Blender change
-  only the shapes, not where the objects are. To remove a part of the game (like the `Witch Hat`),
+  only the shapes, not where the objects are. To remove a part of the game (like `BodyHipSegment`),
   write its name into a `hide.txt` file next to the model. The skin is built for both PC and Quest at once.
 
 </details>
