@@ -1,6 +1,6 @@
 # Skins
 
-![DUST](https://img.shields.io/badge/DUST-0.8.4-1f6feb) ![MelonLoader](https://img.shields.io/badge/MelonLoader-0.7.x-8957e5) ![.NET](https://img.shields.io/badge/.NET-6.0-512bd4) ![Version](https://img.shields.io/badge/version-0.5.0-2ea043)
+![DUST](https://img.shields.io/badge/DUST-0.8.4-1f6feb) ![MelonLoader](https://img.shields.io/badge/MelonLoader-0.7.x-8957e5) ![.NET](https://img.shields.io/badge/.NET-6.0-512bd4) ![Version](https://img.shields.io/badge/version-0.6.0-2ea043)
 
 **🇬🇧 English version is below — [jump to English](#english)**
 
@@ -44,7 +44,7 @@
 1. Скачай [MelonLoader](https://github.com/LavaGang/MelonLoader/releases) 0.7.x. Запусти установщик, выбери `Dust.exe` и нажми **Install**.
 2. Запусти игру один раз и закрой. Это нужно, чтобы MelonLoader всё подготовил.
 3. Скачай `Skins.dll` в [Releases](../../releases/latest) и положи его в папку игры `Mods`.
-4. Запусти игру. В чёрном окне консоли появится **Skins v0.5.0** — значит, всё работает!
+4. Запусти игру. В чёрном окне консоли появится **Skins v0.6.0** — значит, всё работает!
 
 > Красные строки про **OpenXR** в консоли — это нормально, не обращай на них внимания.
 
@@ -129,7 +129,7 @@ dotnet build Skins/Skins.csproj -c Release -p:DustPath="D:\Games\Dust 0.8.4"
 1. Get [MelonLoader](https://github.com/LavaGang/MelonLoader/releases) 0.7.x. Run its installer, pick `Dust.exe` and press **Install**.
 2. Start the game once, then close it. MelonLoader needs this to set itself up.
 3. Download `Skins.dll` from [Releases](../../releases/latest) and put it into the game's `Mods` folder.
-4. Start the game. In the black console window you should see **Skins v0.5.0** — that means it works!
+4. Start the game. In the black console window you should see **Skins v0.6.0** — that means it works!
 
 > Red lines about **OpenXR** in the console are normal. Just ignore them.
 
