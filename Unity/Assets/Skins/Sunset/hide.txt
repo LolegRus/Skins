@@ -1,0 +1,13 @@
+# Детали игры, которые этот скин прячет, — по одной на строку (имена как в дампе мода).
+Left XBow Arm
+Left XBow Arm.001
+Left XBow Mini Arm
+Left XBow Mini Arm.001
+Right XBow Arm
+Right XBow Arm.001
+Right XBow Mini Arm
+Right XBow Mini Arm.001
+Left Bolt
+Left Heal Bolt
+Right Bolt
+Right Heal Bolt

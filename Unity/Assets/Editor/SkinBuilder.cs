@@ -323,7 +323,12 @@ public static class SkinBuilder
                 if (mats[i] != null && !mats[i].name.StartsWith(OwnMaterialPrefix, StringComparison.OrdinalIgnoreCase)) mats[i] = null;
             r.sharedMaterials = mats;
         }
-        ctx.Report.AppendLine($"  +{parentPath}: новая деталь '{node.name}' pos={V(pos)} scale={scale.x:F3}");
+        // «@end» / «@end 0.3» — мод двигает деталь к этой позе по анимации игры (см. SkinApplier в моде)
+        Transform end = null;
+        foreach (Transform c in copy.transform)
+            if (c.name == "@end" || c.name.StartsWith("@end ")) end = c;
+        ctx.Report.AppendLine($"  +{parentPath}: новая деталь '{node.name}' pos={V(pos)} scale={scale.x:F3}" +
+                              (end != null ? $", ездит к {end.name} {V(copy.transform.localRotation * Vector3.Scale(scale, end.localPosition))}" : ""));
     }
 
     /// <summary>
@@ -630,11 +635,25 @@ public static class SkinBuilder
             }
         }
 
-        /// <summary>Пара узла модели: у узла с мешем при повторе имени — узел игры с мешем.</summary>
+        /// <summary>
+        /// Пара узла модели: при повторе имени — сначала узел под парой ближайшего сопоставленного предка
+        /// (у Crossbolt «03_BIGWHEEL» есть и в колесе, и в брошенном колесе), затем узел игры с мешем.
+        /// </summary>
         internal Transform Resolve(Transform skinNode)
         {
             var mf = skinNode.GetComponent<MeshFilter>();
-            return Resolve(skinNode.name, mf != null && mf.sharedMesh != null);
+            bool preferMesh = mf != null && mf.sharedMesh != null;
+            if (_nodes.TryGetValue(skinNode.name, out var exact) && exact.Count > 1)
+                for (Transform p = skinNode.parent; p != null; p = p.parent)
+                {
+                    Transform restParent = Resolve(p);
+                    if (restParent == null) continue;
+                    var under = exact.Where(t => t != restParent && t.IsChildOf(restParent)).ToList();
+                    Transform found = under.FirstOrDefault(t => !preferMesh || t.GetComponent<MeshFilter>() != null) ?? under.FirstOrDefault();
+                    if (found != null) return found;
+                    break;
+                }
+            return Resolve(skinNode.name, preferMesh);
         }
 
         /// <summary>Точное имя (если одно), затем без префикса LH/RH в своей руке, затем синонимы, затем первое совпадение.</summary>
