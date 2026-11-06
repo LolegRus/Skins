@@ -438,9 +438,6 @@ Il2CppObject* FindFirst(Il2CppObject* type) {
 char const* const kClassKeys[] = {"ASSASSIN", "BOULDER", "CROSSBOLT", "GOLEM", "GRAPPLER", "JACKET", "KOBOLD",
                                   "REAPER",   "ROLLER",  "SCARAB",    "SERAPH", "SPARROW", "STYX"};
 
-// Классы только для ПК: в меню их нет, скины нужны, чтобы видеть их на ПК-игроках
-bool IsPcClass(std::string const& key) { return key == "SCARAB" || key == "DRONE"; }
-
 struct SkinFile {
   std::string name;  // имя файла без .skin — так скин зовут в skins.cfg и в сети
   std::string path;
@@ -461,12 +458,13 @@ Il2CppObject* LoadBundle(std::string const& path) {
   return handle ? il2cpp_gchandle_get_target(handle) : nullptr;
 }
 
-Il2CppObject* LoadAsset(Il2CppObject* bundle, std::string const& name) {
-  if (gLoadAsset) return Invoke(gLoadAsset, bundle, il2cpp_string_new(name.c_str()), gGameObjectType);
+Il2CppObject* LoadAsset(Il2CppObject* bundle, std::string const& name, Il2CppObject* type = nullptr) {
+  if (!type) type = gGameObjectType;
+  if (gLoadAsset) return Invoke(gLoadAsset, bundle, il2cpp_string_new(name.c_str()), type);
   if (!gLoadAssetIcall) return nullptr;
   auto wide = ToUtf16(name);
   Span span{wide.data(), static_cast<int32_t>(wide.size())};
-  void* handle = gLoadAssetIcall(NativePtr(bundle), &span, gGameObjectType);
+  void* handle = gLoadAssetIcall(NativePtr(bundle), &span, type);
   return handle ? il2cpp_gchandle_get_target(handle) : nullptr;
 }
 
@@ -1091,40 +1089,126 @@ void TickNetwork() {
 }
 
 // ---------- меню (левый стик) ----------
-// Панель над левой рукой: строка на каждый класс, у которого есть скины (и на текущий класс).
-// Наведи правый контроллер на «<» или «>» и жми курок. Позы рук — как в TimeControl:
-// InputDevices дают их в пространстве трекинга, в мир переводим через камеру: rig = camera * inverse(head).
+// Панель над левой рукой: только класс, за который играешь, его скины — плитками по две в ряд
+// (первая — родной вид). Наведи правый контроллер на плитку и жми курок. Тексты — по-английски.
+// Позы рук — как в TimeControl: InputDevices дают их в пространстве трекинга,
+// в мир переводим через камеру: rig = camera * inverse(head).
 
 constexpr int kHead = 3;       // XRNode.Head
 constexpr int kLeftHand = 4;   // XRNode.LeftHand
 constexpr int kRightHand = 5;  // XRNode.RightHand
 constexpr float kFontSize = 0.12f;
-constexpr float kPanelWidth = 0.20f;
-constexpr float kRowHeight = 0.026f;
-constexpr float kPanelAboveHand = 0.13f;
-constexpr int kMaxRows = sizeof(kClassKeys) / sizeof(kClassKeys[0]);
+constexpr float kPanelWidth = 0.21f;
+constexpr float kPanelTop = 0.097f, kPanelMargin = 0.010f, kPadX = 0.012f;
+constexpr float kHeaderY = 0.083f;
+constexpr float kPanelAboveHand = 0.15f;  // м над левой рукой (было 0.13 — низковато)
+constexpr int kColumns = 2;
+// Плитки — страницами по kMaxTiles (2 × 2); первая плитка первой страницы — родной вид.
+// Страниц больше одной — под плитками «<», номер страницы и «>»
+constexpr int kMaxTiles = 4;
+constexpr float kTileWidth = 0.090f, kTileHeight = 0.030f, kTileGap = 0.006f;
+constexpr float kNavY = 0.054f - 2 * (kTileHeight + kTileGap);  // ряд стрелок — на месте третьего ряда плиток
+constexpr float kNavX = 0.066f, kNavWidth = 0.036f, kNavHeight = 0.022f;
+// ТЕСТ: столько кнопок-заглушек («Test 1»…) добавляется к скинам — проверить страницы. Перед релизом — 0
+constexpr int kTestTiles = 0;
+constexpr float kBorder = 0.0015f;  // толщина контура панели и надетой плитки
+constexpr float kPanelRadius = 0.008f, kTileRadius = 0.005f;
 
-// Надписи: заголовок, подсказка, по 4 на строку (класс, «<», скин, «>»), курсор
-enum { kTitleText, kHintText, kRowTexts };
-constexpr int kTextsPerRow = 4;
-constexpr int kCursorText = kRowTexts + kMaxRows * kTextsPerRow;
+// Цвета (вариант «графит»), #RRGGBBAA
+constexpr char const* kColPanel = "121314FF";
+constexpr char const* kColPanelLine = "FFFFFF70";
+constexpr char const* kColTile = "222427FF";
+constexpr char const* kColTileHover = "2E3135FF";
+constexpr char const* kColWorn = "3A3D42FF";
+constexpr char const* kColWornLine = "FFFFFFFF";
+
+// Надписи: класс (слева сверху), подсказка (справа сверху), заметка, по одной на плитку, курсор
+enum { kClassText, kHintText, kNoteText, kPrevText, kNextText, kPageText, kTileTexts };
+constexpr int kCursorText = kTileTexts + kMaxTiles;
 constexpr int kTextCount = kCursorText + 1;
 
-struct Hit {
-  int row;   // -1 — не кнопка
-  int step;  // -1 «<», +1 «>»
+// Фон и контуры. Шейдеров, кроме TextMeshPro, в сборке для Quest нет (квад с Unlit не виден),
+// поэтому прямоугольник — надпись TMP из одного невидимого символа в <mark>: подложку TMP рисует
+// своим шейдером. Её размер зависит от шрифта — меряем один раз по границам меша и дальше тянем
+// масштабом. Скруглённая фигура — три прямоугольника крестом и «ступенькой» на месте углов,
+// контур — такая же фигура побольше под непрозрачной заливкой. Порядок отрисовки — sortingOrder:
+// прозрачное по расстоянию до камеры сортируется ненадёжно (плитки ушли бы под панель).
+// Курсор — такой же кружок из трёх прямоугольников (белая точка на тёмной обводке), поверх надписей;
+// без фона — буква «o».
+enum { kPanelOutline, kPanelFill, kWornOutline, kTileFills };
+constexpr int kPrevFill = kTileFills + kMaxTiles, kNextFill = kPrevFill + 1;  // кнопки страниц
+constexpr int kCursorOutline = kNextFill + 1, kCursorDot = kCursorOutline + 1;
+constexpr int kShapeCount = kCursorDot + 1;
+constexpr int kParts = 3;  // прямоугольников в фигуре
+constexpr int kRectCount = kShapeCount * kParts;
+// Порядок отрисовки фигур: панель, контур надетой, плитки; надписи — 14; курсор — 15 и 16
+int ShapeOrder(int shape) {
+  if (shape == kCursorOutline) return 15;
+  if (shape == kCursorDot) return 16;
+  return shape < kTileFills ? 10 + shape : 13;
+}
+constexpr float kCursorRadius = 0.0028f, kCursorBorder = 0.0008f;
+constexpr char const* kColCursor = "FFFFFFFF";
+constexpr char const* kColCursorLine = "121314D9";
+Vec3 gCursorLocal;  // курсор на панели (локальные x, y)
+
+// Луч, как в меню Meta: белая линия от руки к курсору, тает к концу и не доходит до курсора — только
+// показывает направление. Отрезки — такие же подложки <mark>, каждый повёрнут вдоль луча лицом к камере.
+// Отдельный корень в мире (не под панелью: у панели свой поворот и масштаб).
+constexpr int kRaySegments = 8;
+constexpr float kRayStart = 0.04f;        // м от руки до начала линии (из середины руки не торчит)
+constexpr float kRayGap = 0.03f;          // м, на сколько линия не доходит до курсора
+constexpr float kRayIdleLength = 0.30f;   // м — длина, когда луч мимо панели
+constexpr float kRayWidthStart = 0.0024f, kRayWidthEnd = 0.0012f;
+constexpr float kRayAlpha = 0.55f;        // у руки; к концу — почти 0
+Held gRayRoot;
+Il2CppObject* gRaySegments[kRaySegments];
+Il2CppObject* gRayTransforms[kRaySegments];
+bool gRayShown;
+
+// Видимая правая рука класса — откуда идёт луч. У «физических» классов (Golem, Boulder, Roller…) рука
+// стоит далеко от контроллера, и луч от контроллера шёл «не оттуда». Узел руки — с PoseInterpolator
+// (у трекера контроллера «Right Hand Pose» — TransformTracker); имена — по дампам классов.
+Il2CppObject* gPoseInterpolatorType;
+Held gHandClass;  // класс, для которого искали руку
+Held gRightHand;
+bool gHandLogged;
+
+std::string MarkText(char const* color);
+
+struct Bounds {
+  Vec3 center, extents;
 };
 
 Il2CppObject* gTexts[kTextCount];
 std::string gShown[kTextCount];
 Vec3 gTextPos[kTextCount];
+Il2CppObject* gRects[kRectCount];
+Il2CppObject* gRectTransforms[kRectCount];
+std::string gRectShown[kRectCount];
+Vec3 gRectScale[kRectCount], gRectPos[kRectCount];
+MethodInfo const* gTextBounds;            // TMP_Text.get_bounds
+MethodInfo const* gMeshBounds;            // Mesh.get_bounds — если первого нет
+MethodInfo const* gTmpSortingOrder;       // TextMeshPro.set_sortingOrder
+MethodInfo const* gRendererSortingOrder;  // Renderer.set_sortingOrder — если первого нет
+MethodInfo const* gSetSizeDelta;          // RectTransform.set_sizeDelta — для надписей у краёв панели
+float gTileFont = kFontSize;
+bool gHasBackground;                      // фон рисуем (нашлись границы меша и порядок отрисовки)
+bool gMarkMeasured;
+Vec3 gMarkCenter, gMarkSize;  // подложка <mark> в локальных координатах надписи
+int gMeasureFrames;
 Held gMenuRoot;
 Il2CppObject* gMenuTransform;
 Il2CppObject* gCursorTransform;
 bool gMenuFailed, gMenuVisible, gStickWas, gTriggerWas, gUsePointerPose = true;
 float gMenuScale = 1.f;
-std::vector<std::string> gRows;  // ключи классов в строках меню
-Hit gHovered{-1, 0};
+std::vector<SkinFile*> gTiles;       // скины на плитках 1..N (плитка 0 — родной вид)
+std::vector<std::string> gTestNames;  // ТЕСТ: заглушки после скинов (kTestTiles)
+std::string gTestPick;               // ТЕСТ: выбранная заглушка — только подсветка, в skins.cfg не пишется
+int gPage;                           // текущая страница
+int gHovered = -1;                   // ячейка страницы под лучом (0…kMaxTiles-1), -1 — нет
+int gHoverNav;                       // кнопка страниц под лучом: -1 «<», +1 «>», 0 — нет
+bool gOnPanel;                  // луч на панели — показываем курсор
 
 uint64_t Device(int node) { return Call<uint64_t>(gGetDeviceId, node); }
 
@@ -1160,48 +1244,179 @@ Il2CppObject* FindFont() {
   return Length(all) > 0 ? At(all, 0) : nullptr;
 }
 
-float RowY(int row) { return 0.040f - row * kRowHeight; }
+// Пиксельный шрифт меню — Pixelify Sans (лицензия OFL): бандл MenuFont.font рядом со скинами,
+// собирает Skins\Unity (Tools → Skins → Build Menu Font). Нет файла или не загрузился — шрифт игры.
+// Шейдер материала берём у шрифта игры: в бандле он без стерео-вариантов и рисовался бы одним глазом.
+// В атласе только ASCII — имена с другими буквами пишем шрифтом игры.
+constexpr char kMenuFontFile[] = "MenuFont.font";
+constexpr char kMenuFontAsset[] = "PixelifySans SDF";
+MethodInfo const* gFontMaterial;  // TMP_Asset.get_material
+MethodInfo const* gGetShader;     // Material.get_shader / set_shader
+MethodInfo const* gSetShader;
+Held gFontBundle, gMenuFont;
+bool gMenuFontFailed;
+Il2CppObject* gGameFont;  // шрифт игры — для имён не латиницей
+Il2CppObject* gTileFontObj[kMaxTiles];
+
+Il2CppObject* MenuFont(Il2CppObject* gameFont) {
+  if (gMenuFontFailed) return nullptr;
+  if (Alive(gMenuFont.obj)) return gMenuFont.obj;
+  Free(gMenuFont);
+  auto fail = [](char const* why) -> Il2CppObject* {
+    gMenuFontFailed = true;
+    LOG(ANDROID_LOG_WARN, "шрифт меню: %s — шрифт игры", why);
+    return nullptr;
+  };
+  if (!gFontMaterial || !gGetShader || !gSetShader) return fail("нет get_material/shader");
+  if (!Alive(gFontBundle.obj)) {
+    Free(gFontBundle);
+    std::string path = std::string(kSkinDir) + kMenuFontFile;
+    if (FILE* f = fopen(path.c_str(), "rb")) {
+      fclose(f);
+    } else {
+      return fail("нет файла MenuFont.font");
+    }
+    gFontBundle = Hold(LoadBundle(path));
+    if (!gFontBundle.obj) return fail("бандл не загрузился");
+  }
+  auto font = LoadAsset(gFontBundle.obj, kMenuFontAsset, gFontAssetType);
+  if (!font) return fail("нет шрифта в бандле");
+  auto ours = Invoke(gFontMaterial, font);
+  auto theirs = gameFont ? Invoke(gFontMaterial, gameFont) : nullptr;
+  auto shader = theirs ? Invoke(gGetShader, theirs) : nullptr;
+  if (!ours || !shader) return fail("нет материала или шейдера");
+  Invoke(gSetShader, ours, shader);
+  gMenuFont = Hold(font);
+  LOG(ANDROID_LOG_INFO, "шрифт меню: Pixelify Sans");
+  return font;
+}
+
+bool IsAscii(std::string const& s) {
+  for (unsigned char c : s)
+    if (c >= 0x80) return false;
+  return true;
+}
+
+// Центр плитки на панели
+Vec3 TilePos(int i) {
+  float x = (i % kColumns - (kColumns - 1) / 2.f) * (kTileWidth + kTileGap);
+  float y = 0.054f - (i / kColumns) * (kTileHeight + kTileGap);
+  return {x, y, 0};
+}
+
+int PageCount(int count) { return std::max(1, (count + kMaxTiles - 1) / kMaxTiles); }
+
+// Низ панели: под рядом стрелок, если страниц несколько, иначе под последним рядом плиток
+// (без класса — под заметкой). Высота не меняется от страницы к странице
+float PanelBottom(int count) {
+  if (count == 0) return 0.040f;
+  if (PageCount(count) > 1) return kNavY - kNavHeight / 2 - kPanelMargin;
+  return TilePos(std::min(count, kMaxTiles) - 1).y - kTileHeight / 2 - kPanelMargin;
+}
+
+void SetSorting(Il2CppObject* text, int32_t order) {
+  if (gTmpSortingOrder) {
+    Invoke(gTmpSortingOrder, text, &order);
+  } else if (auto renderer = Component(GameObjectOf(text), gRendererType)) {
+    Invoke(gRendererSortingOrder, renderer, &order);
+  }
+}
+
+constexpr int kAlignCenter = 514, kAlignLeft = 513, kAlignRight = 516;  // TextAlignmentOptions
+
+struct Vec2 {
+  float x, y;
+};
+
+// Надпись TMP с общими настройками меню. Выравнивание по краю — внутри рамки width × 0.02 с центром в pos
+// (у 3D-надписи TMP рамка по умолчанию 20 × 5 м); без set_sizeDelta — по центру
+Il2CppObject* NewText(Il2CppObject* font, Vec3 const& pos, int32_t order, int align = kAlignCenter, float width = 0,
+                      Il2CppObject* parent = nullptr) {
+  int noWrap = 0;  // TextWrappingModes.NoWrap
+  float size = kFontSize;
+  if (align != kAlignCenter && !gSetSizeDelta) align = kAlignCenter;
+  auto go = NewGameObject("SkinsText", parent ? parent : gMenuTransform);
+  auto text = Keep(Invoke(gAddComponent, go, gTextMeshProType));
+  if (!text) return nullptr;
+  auto t = Call<Il2CppObject*>(gGameObjectTransform, go);
+  Invoke(gSetFont, text, font);
+  Invoke(gSetFontSize, text, &size);
+  Invoke(gSetAlignment, text, &align);
+  Invoke(gSetWrapping, text, &noWrap);
+  if (align != kAlignCenter) {
+    Vec2 box{width, 0.02f};
+    Invoke(gSetSizeDelta, t, &box);
+  }
+  Invoke(gSetLocalPosition, t, &pos);
+  if (gHasBackground) SetSorting(text, order);
+  return text;
+}
 
 bool BuildMenu() {
-  auto font = FindFont();
-  if (!font) return false;  // сцена ещё грузится, попробуем позже
+  gGameFont = FindFont();
+  if (!gGameFont) return false;  // сцена ещё грузится, попробуем позже
+  Keep(gGameFont);
+  auto pixel = MenuFont(gGameFont);
+  auto font = pixel ? pixel : gGameFont;
+  for (auto& f : gTileFontObj) f = font;
 
   auto root = NewGameObject("SkinsMenu", nullptr);
   gMenuRoot = Hold(root);
   Invoke(gDontDestroyOnLoad, nullptr, root);
   gMenuTransform = Keep(Call<Il2CppObject*>(gGameObjectTransform, root));
 
-  gTextPos[kTitleText] = {-0.045f, 0.075f, 0};
-  gTextPos[kHintText] = {0.055f, 0.075f, 0};
-  for (int r = 0; r < kMaxRows; r++) {
-    float y = RowY(r);
-    gTextPos[kRowTexts + r * kTextsPerRow + 0] = {-0.060f, y, 0};  // класс
-    gTextPos[kRowTexts + r * kTextsPerRow + 1] = {-0.002f, y, 0};  // «<»
-    gTextPos[kRowTexts + r * kTextsPerRow + 2] = {0.045f, y, 0};   // скин
-    gTextPos[kRowTexts + r * kTextsPerRow + 3] = {0.090f, y, 0};   // «>»
-  }
+  // Класс и подсказка — у левого и правого края, по половине ширины панели на каждую
+  float half = kPanelWidth / 2 - kPadX;
+  gTextPos[kClassText] = {-half / 2, kHeaderY, 0};
+  gTextPos[kHintText] = {half / 2, kHeaderY, 0};
+  if (!gSetSizeDelta) gTextPos[kClassText].x = 0;  // по центру; подсказки тогда нет — места на обе не хватит
+  gTileFont = kFontSize;
+  gTextPos[kNoteText] = {0, 0.062f, 0};
+  for (int i = 0; i < kMaxTiles; i++) gTextPos[kTileTexts + i] = TilePos(i);
+  gTextPos[kPrevText] = {-kNavX, kNavY, 0};
+  gTextPos[kNextText] = {kNavX, kNavY, 0};
+  gTextPos[kPageText] = {0, kNavY, 0};
   gTextPos[kCursorText] = {0, 0, 0};
 
-  int center = 514;  // TextAlignmentOptions.Center
-  int noWrap = 0;    // TextWrappingModes.NoWrap
-  float size = kFontSize;
+  if (gHasBackground)
+    for (int i = 0; i < kRectCount; i++) {
+      int shape = i / kParts;
+      gRects[i] = NewText(font, {0, 0, 0}, ShapeOrder(shape));
+      if (!gRects[i]) break;
+      gRectTransforms[i] = Keep(Call<Il2CppObject*>(gComponentTransform, gRects[i]));
+      gRectShown[i].clear();
+      gRectScale[i] = {1, 1, 1};
+      gRectPos[i] = {0, 0, 0};
+    }
   for (int i = 0; i < kTextCount; i++) {
-    auto go = NewGameObject("SkinsText", gMenuTransform);
-    auto text = gTexts[i] = Keep(Invoke(gAddComponent, go, gTextMeshProType));
-    if (!text) {
+    int align = i == kClassText ? kAlignLeft : i == kHintText ? kAlignRight : kAlignCenter;
+    gTexts[i] = NewText(font, gTextPos[i], i == kCursorText ? 15 : 14, align, half);
+    if (!gTexts[i]) {
       gMenuFailed = true;
       LOG(ANDROID_LOG_ERROR, "не удалось добавить TextMeshPro — меню не будет");
       return false;
     }
-    Invoke(gSetFont, text, font);
-    Invoke(gSetFontSize, text, &size);
-    Invoke(gSetAlignment, text, &center);
-    Invoke(gSetWrapping, text, &noWrap);
-    Invoke(gSetLocalPosition, Call<Il2CppObject*>(gGameObjectTransform, go), &gTextPos[i]);
     gShown[i].clear();
   }
   gCursorTransform = Keep(Call<Il2CppObject*>(gComponentTransform, gTexts[kCursorText]));
   bool hidden = false;
+  if (gHasBackground && !Alive(gRayRoot.obj)) {
+    Free(gRayRoot);
+    auto ray = NewGameObject("SkinsRay", nullptr);
+    gRayRoot = Hold(ray);
+    Invoke(gDontDestroyOnLoad, nullptr, ray);
+    auto rayTransform = Call<Il2CppObject*>(gGameObjectTransform, ray);
+    for (int i = 0; i < kRaySegments; i++) {
+      gRaySegments[i] = NewText(font, {0, 0, 0}, 17, kAlignCenter, 0, rayTransform);  // поверх панели
+      if (!gRaySegments[i]) break;
+      gRayTransforms[i] = Keep(Call<Il2CppObject*>(gComponentTransform, gRaySegments[i]));
+      char color[16];
+      snprintf(color, sizeof color, "FFFFFF%02X", static_cast<int>(255 * kRayAlpha * (1.f - float(i) / kRaySegments)));
+      Invoke(gSetText, gRaySegments[i], il2cpp_string_new(MarkText(color).c_str()));
+    }
+    Invoke(gSetActive, ray, &hidden);
+    gRayShown = false;
+  }
   Invoke(gSetActive, root, &hidden);
   gMenuVisible = false;
   return true;
@@ -1213,56 +1428,367 @@ void SetText(int i, std::string const& text) {
   Invoke(gSetText, gTexts[i], il2cpp_string_new(text.c_str()));
 }
 
+bool Same(Vec3 a, Vec3 b) { return std::fabs(a.x - b.x) + std::fabs(a.y - b.y) + std::fabs(a.z - b.z) < 1e-6f; }
+
+void SetRectText(int i, std::string const& text) {
+  if (gRectShown[i] == text) return;
+  gRectShown[i] = text;
+  Invoke(gSetText, gRects[i], il2cpp_string_new(text.c_str()));
+}
+
+std::string MarkText(char const* color) {
+  return std::string("<mark=#") + color + "><color=#00000000>.</color></mark>";
+}
+
+// Прямоугольник цвета color (#RRGGBBAA без «#»; nullptr — спрятать) от (x0, y0) до (x1, y1)
+void PlaceRect(int i, char const* color, float x0, float y0, float x1, float y1) {
+  SetRectText(i, color ? MarkText(color) : "");
+  if (!color) return;
+  Vec3 s{(x1 - x0) / gMarkSize.x, (y1 - y0) / gMarkSize.y, 1};
+  Vec3 p{(x0 + x1) / 2 - gMarkCenter.x * s.x, (y0 + y1) / 2 - gMarkCenter.y * s.y, 0};
+  if (!Same(s, gRectScale[i])) {
+    gRectScale[i] = s;
+    Invoke(gSetLocalScale, gRectTransforms[i], &s);
+  }
+  if (!Same(p, gRectPos[i])) {
+    gRectPos[i] = p;
+    Invoke(gSetLocalPosition, gRectTransforms[i], &p);
+  }
+}
+
+// Скруглённая фигура: крест из двух прямоугольников (без углов радиуса r) и третий — со срезом 0.29·r
+// (точка дуги на 45°): на месте каждого угла две маленькие ступеньки
+void PlaceShape(int shape, char const* color, float x0, float y0, float x1, float y1, float r) {
+  float c = r * 0.29f;
+  int i = shape * kParts;
+  PlaceRect(i + 0, color, x0, y0 + r, x1, y1 - r);
+  PlaceRect(i + 1, color, x0 + r, y0, x1 - r, y1);
+  PlaceRect(i + 2, color, x0 + c, y0 + c, x1 - c, y1 - c);
+}
+
+// Кружок радиуса r: три прямоугольника, вписанных в окружность (полуширина и полувысота — точки дуги
+// на ~24°, 45° и ~66°), — на размере курсора это ровная точка
+void PlaceDot(int shape, char const* color, float cx, float cy, float r) {
+  int i = shape * kParts;
+  float a = r * 0.92f, b = r * 0.40f, c = r * 0.71f;
+  PlaceRect(i + 0, color, cx - a, cy - b, cx + a, cy + b);
+  PlaceRect(i + 1, color, cx - b, cy - a, cx + b, cy + a);
+  PlaceRect(i + 2, color, cx - c, cy - c, cx + c, cy + c);
+}
+
+// Подложка <mark> из одной точки — по границам меша надписи (TMP строит меш при отрисовке, поэтому не сразу)
+// Границы меша надписи в её локальных координатах (нули — меша ещё нет)
+Bounds TextBounds(Il2CppObject* text) {
+  if (gTextBounds) return Call<Bounds>(gTextBounds, text);
+  if (!gMeshBounds) return {};
+  auto filter = Component(GameObjectOf(text), gMeshFilterType);
+  auto mesh = filter ? Call<Il2CppObject*>(gGetSharedMesh, filter) : nullptr;
+  return mesh ? Call<Bounds>(gMeshBounds, mesh) : Bounds{};
+}
+
+bool MeasureMark() {
+  Bounds b = TextBounds(gRects[kPanelFill * kParts]);
+  if (!(b.extents.x > 1e-5f && b.extents.y > 1e-5f)) return false;
+  gMarkCenter = b.center;
+  gMarkSize = b.extents * 2.f;
+  LOG(ANDROID_LOG_INFO, "подложка <mark>: %.4f × %.4f, центр (%.4f, %.4f)", gMarkSize.x, gMarkSize.y, gMarkCenter.x,
+      gMarkCenter.y);
+  return true;
+}
+
+void HideRects() {
+  for (int i = 0; i < kRectCount; i++)
+    if (gRects[i]) SetRectText(i, "");
+}
+
+void UpdateBackground(int count, int worn) {
+  if (!gHasBackground || !gRects[kRectCount - 1]) return;
+  if (!gMarkMeasured) {
+    SetRectText(kPanelFill * kParts, MarkText("00000000"));  // невидимая — только чтобы измерить (остальные пустые)
+    if (MeasureMark()) {
+      gMarkMeasured = true;
+    } else if (++gMeasureFrames > 300) {
+      gHasBackground = false;
+      HideRects();
+      LOG(ANDROID_LOG_WARN, "не удалось измерить подложку <mark> — меню без фона");
+      return;
+    } else {
+      return;
+    }
+  }
+
+  float x = kPanelWidth / 2, bottom = PanelBottom(count), b = kBorder;
+  PlaceShape(kPanelOutline, kColPanelLine, -x - b, bottom - b, x + b, kPanelTop + b, kPanelRadius + b);
+  PlaceShape(kPanelFill, kColPanel, -x, bottom, x, kPanelTop, kPanelRadius);
+  float w = kTileWidth / 2, h = kTileHeight / 2;
+  if (worn >= 0 && worn < count) {
+    Vec3 c = TilePos(worn);
+    PlaceShape(kWornOutline, kColWornLine, c.x - w - b, c.y - h - b, c.x + w + b, c.y + h + b, kTileRadius + b);
+  } else {
+    PlaceShape(kWornOutline, nullptr, 0, 0, 0, 0, 0);
+  }
+  int onPage = std::min(kMaxTiles, count - gPage * kMaxTiles);  // плиток на этой странице
+  for (int i = 0; i < kMaxTiles; i++) {
+    Vec3 c = TilePos(i);
+    char const* color = i >= onPage ? nullptr : i == worn ? kColWorn : i == gHovered ? kColTileHover : kColTile;
+    PlaceShape(kTileFills + i, color, c.x - w, c.y - h, c.x + w, c.y + h, kTileRadius);
+  }
+  bool paged = PageCount(count) > 1;
+  float nw = kNavWidth / 2, nh = kNavHeight / 2;
+  for (int side : {-1, 1}) {
+    char const* color = !paged ? nullptr : gHoverNav == side ? kColTileHover : kColTile;
+    float cx = side * kNavX;
+    PlaceShape(side < 0 ? kPrevFill : kNextFill, color, cx - nw, kNavY - nh, cx + nw, kNavY + nh, kTileRadius);
+  }
+  Vec3 p = gCursorLocal;
+  PlaceDot(kCursorOutline, gOnPanel ? kColCursorLine : nullptr, p.x, p.y, kCursorRadius + kCursorBorder);
+  PlaceDot(kCursorDot, gOnPanel ? kColCursor : nullptr, p.x, p.y, kCursorRadius);
+}
+
 std::string Title(std::string const& key) {
   std::string s = key;
   for (size_t i = 1; i < s.size(); i++) s[i] = static_cast<char>(tolower(static_cast<unsigned char>(s[i])));
   return s;
 }
 
-std::string Mark(std::string const& s, bool on) { return on ? "<mark=#FFFFFF50>" + s + "</mark>" : s; }
+int TileCount() { return gLocal.key.empty() ? 0 : static_cast<int>(gTiles.size() + gTestNames.size()) + 1; }
 
-// Строки меню: VR-классы со скинами, свой класс — первым
-void RefreshRows() {
-  gRows.clear();
-  if (!gLocal.key.empty()) gRows.push_back(gLocal.key);
-  for (auto key : kClassKeys)
-    if (key != gLocal.key && !IsPcClass(key) && !SkinsFor(key).empty()) gRows.push_back(key);
+bool IsTestTile(int i) { return i > static_cast<int>(gTiles.size()); }
+
+std::string TileName(int i) {
+  if (i == 0) return "Original";
+  return IsTestTile(i) ? gTestNames[i - 1 - gTiles.size()] : gTiles[i - 1]->name;
+}
+
+// Что подсвечено как надетое: тестовая заглушка (если выбрана) или скин из skins.cfg
+std::string ShownSelection() {
+  if (!gTestPick.empty()) return gTestPick;
+  return gLocal.key.empty() ? "" : Selected(gLocal.key);
+}
+
+// ---- шрифт плиток ----
+// У всех плиток один размер шрифта — чтобы длинное имя рядом с коротким не выглядело другим шрифтом.
+// Сначала прикидываем ширину по таблице букв Arial/Liberation Sans (em = 0.1 размера шрифта у 3D-надписи TMP),
+// потом, когда TMP построит меш, сверяем с настоящей шириной и, если не влезло, уменьшаем.
+constexpr float kTextRoom = kTileWidth - 2 * 0.008f;  // ширина плитки без полей
+constexpr float kMinFont = kFontSize * 0.6f;
+int gFitWait;  // кадров до сверки: границы меша отстают от нового размера шрифта
+
+float CharEm(unsigned char c) {
+  if (c == ' ' || strchr("iljtfrI.,'", c)) return 0.28f;
+  if (strchr("mwMW", c)) return 0.85f;
+  if (isupper(c)) return 0.68f;
+  return 0.54f;  // строчные, цифры, прочее (и байты не-ASCII — с запасом)
+}
+
+float EstimateFont() {
+  float font = kFontSize;
+  for (int i = 0; i < TileCount(); i++) {
+    float em = 0;
+    for (unsigned char c : TileName(i)) em += CharEm(c);
+    if (gMenuFont.obj) em *= 1.1f;  // Pixelify Sans чуть шире Arial
+    if (em > 0) font = std::min(font, kTextRoom / (em * 0.1f));
+  }
+  return std::max(font, kMinFont);
+}
+
+void ApplyTileFont() {
+  for (int i = 0; i < kMaxTiles; i++) Invoke(gSetFontSize, gTexts[kTileTexts + i], &gTileFont);
+  gFitWait = 2;
+}
+
+// Сверка с настоящей шириной имён (только уменьшаем — иначе шрифт «прыгал» бы туда-сюда)
+void FitTiles(int count) {
+  if (!gTextBounds && !gMeshBounds) return;
+  if (gFitWait > 0) {
+    gFitWait--;
+    return;
+  }
+  float font = gTileFont;
+  for (int i = 0; i < std::min(kMaxTiles, count - gPage * kMaxTiles); i++) {
+    float w = TextBounds(gTexts[kTileTexts + i]).extents.x * 2;
+    if (w > kTextRoom) font = std::min(font, gTileFont * kTextRoom / w);
+  }
+  font = std::max(font, kMinFont);
+  if (font < gTileFont - 1e-4f) {
+    LOG(ANDROID_LOG_INFO, "шрифт плиток %.3f → %.3f (по ширине имён)", gTileFont, font);
+    gTileFont = font;
+    ApplyTileFont();
+  }
+}
+
+// Скины текущего класса на плитках
+void RefreshTiles() {
+  gTiles.clear();
+  gTestNames.clear();
+  gTestPick.clear();
+  if (!gLocal.key.empty()) {
+    gTiles = SkinsFor(gLocal.key);
+    // ТЕСТ: имена разной длины — проверить и страницы, и подгонку шрифта
+    static char const* const kTestNames[] = {"Test 1", "Test Two", "T3", "Test Number 4", "Test 5"};
+    for (int i = 0; i < kTestTiles; i++) {
+      std::string name = kTestNames[i % 5];
+      if (i >= 5) name += " b";
+      gTestNames.push_back(name);
+    }
+  }
+  // Открываем на странице надетого скина
+  gPage = 0;
+  std::string selected = ShownSelection();
+  for (int i = 1; i < TileCount(); i++)
+    if (TileName(i) == selected) gPage = i / kMaxTiles;
+  if (Alive(gMenuRoot.obj)) {
+    gTileFont = EstimateFont();
+    ApplyTileFont();
+  }
+}
+
+// Надпись плитки. С фоном — просто цвет текста (без жирного: ширина имени не меняется при выборе);
+// без фона — полупрозрачная <mark> поверх (TMP рисует её над текстом, поэтому только слабая)
+std::string Tile(std::string const& name, bool worn, bool hovered) {
+  if (gHasBackground && gMarkMeasured)
+    return (worn || hovered ? "<color=#FFFFFF>" : "<color=#E6E7E9>") + name + "</color>";
+  std::string pad = "  ";
+  std::string text = "<color=#E6E7E9>" + pad + name + pad + "</color>";
+  if (worn) return "<mark=#FFFFFF40>" + text + "</mark>";
+  if (hovered) return "<mark=#FFFFFF20>" + text + "</mark>";
+  return text;
 }
 
 void UpdateTexts() {
-  SetText(kTitleText, "<color=#42FFE0>Skins</color>");
-  SetText(kHintText, "<color=#999999><size=70%>aim + trigger</size></color>");
-  for (int r = 0; r < kMaxRows; r++) {
-    int base = kRowTexts + r * kTextsPerRow;
-    if (r >= static_cast<int>(gRows.size())) {
-      for (int k = 0; k < kTextsPerRow; k++) SetText(base + k, "");
+  int count = TileCount();
+  SetText(kClassText, count == 0 ? "<color=#FFFFFF>Skins</color>" : "<color=#FFFFFF>" + Title(gLocal.key) + "</color>");
+  SetText(kHintText, gSetSizeDelta ? "<color=#8C8F94><size=70%>aim + trigger</size></color>" : "");
+  SetText(kNoteText, count == 0   ? "<color=#8C8F94><size=80%>Spawn as a class\nto pick its skin</size></color>"
+                     : count == 1 ? "<color=#8C8F94><size=70%>No skins yet</size></color>"
+                                  : "");
+  // Без класса заметка — посередине панели, с одной плиткой — на месте второй
+  Vec3 notePos = count == 1 ? TilePos(1) : Vec3{0, 0.062f, 0};
+  if (!Same(notePos, gTextPos[kNoteText])) {
+    gTextPos[kNoteText] = notePos;
+    Invoke(gSetLocalPosition, Call<Il2CppObject*>(gComponentTransform, gTexts[kNoteText]), &notePos);
+  }
+  // Стрелки и номер страницы; у края — тусклая стрелка, она не нажимается
+  int pages = PageCount(count);
+  if (count > 0 && gPage >= pages) gPage = pages - 1;
+  auto arrow = [&](char const* glyph, bool enabled) {
+    return pages > 1 ? std::string(enabled ? "<color=#FFFFFF>" : "<color=#55585D>") + glyph + "</color>" : "";
+  };
+  SetText(kPrevText, arrow("<", gPage > 0));
+  SetText(kNextText, arrow(">", gPage < pages - 1));
+  SetText(kPageText, pages > 1 ? "<color=#8C8F94><size=80%>" + std::to_string(gPage + 1) + "/" +
+                                      std::to_string(pages) + "</size></color>"
+                               : "");
+
+  std::string selected = ShownSelection();
+  int worn = -1;  // ячейка надетого на этой странице
+  for (int i = 0; i < kMaxTiles; i++) {
+    int index = gPage * kMaxTiles + i;
+    if (index >= count) {
+      SetText(kTileTexts + i, "");
       continue;
     }
-    std::string const& key = gRows[r];
-    bool any = !SkinsFor(key).empty();
-    std::string skin = Selected(key);
-    bool current = key == gLocal.key;
-    SetText(base + 0, current ? "<color=#FFD24A>" + Title(key) + "</color>" : Title(key));
-    SetText(base + 1, any ? Mark("<color=#56EAFF><</color>", gHovered.row == r && gHovered.step < 0) : "");
-    SetText(base + 2, !any ? "<color=#777777>no skins</color>" : skin.empty() ? "<color=#BBBBBB>normal</color>" : skin);
-    SetText(base + 3, any ? Mark("<color=#56EAFF>></color>", gHovered.row == r && gHovered.step > 0) : "");
+    std::string name = TileName(index);
+    bool on = index == 0 ? selected.empty() : name == selected;
+    if (on) worn = i;
+    auto font = Alive(gMenuFont.obj) && IsAscii(name) ? gMenuFont.obj : gGameFont;
+    if (font != gTileFontObj[i]) {
+      gTileFontObj[i] = font;
+      Invoke(gSetFont, gTexts[kTileTexts + i], font);
+      gFitWait = 2;
+    }
+    SetText(kTileTexts + i, Tile(name, on, gHovered == i));
   }
-  SetText(kCursorText, gHovered.row >= -1 && gHovered.step != 0 ? "<color=#FFD24A>o</color>" : "");
+  bool dotCursor = gHasBackground && gMarkMeasured;  // кружок из подложек; без фона — буква
+  SetText(kCursorText, gOnPanel && !dotCursor ? "<color=#FFFFFF>o</color>" : "");
+  FitTiles(count);
+  UpdateBackground(count, worn);
 }
 
-// Соседний скин класса; после последнего — родной вид
-void Step(std::string const& key, int step) {
-  auto skins = SkinsFor(key);
-  if (skins.empty()) return;
-  int n = static_cast<int>(skins.size()) + 1, index = 0;
-  std::string current = Selected(key);
-  for (int i = 0; i < static_cast<int>(skins.size()); i++)
-    if (skins[i]->name == current) index = i + 1;
-  index = ((index + step) % n + n) % n;
-  gConfig[key] = index == 0 ? "" : skins[index - 1]->name;
+void Pick(int tile) {
+  std::string const& key = gLocal.key;
+  if (IsTestTile(tile)) {  // ТЕСТ: заглушка — только подсветить
+    gTestPick = TileName(tile);
+    LOG(ANDROID_LOG_INFO, "тест: выбрана заглушка «%s»", gTestPick.c_str());
+    return;
+  }
+  gTestPick.clear();
+  gConfig[key] = tile == 0 ? "" : gTiles[tile - 1]->name;
   WriteConfig();
   LOG(ANDROID_LOG_INFO, "%s: %s", key.c_str(), gConfig[key].empty() ? "родной вид" : gConfig[key].c_str());
-  if (key == gLocal.key) Wear(gLocal, gConfig[key], "свой");
+  Wear(gLocal, gConfig[key], "свой");
+}
+
+struct HandNode {
+  Il2CppObject* t;
+  std::string name;
+  int depth;
+};
+
+void WalkNodes(Il2CppObject* t, int depth, std::vector<HandNode>& out) {
+  out.push_back({t, NameOf(t), depth});
+  for (int i = 0, n = ChildCount(t); i < n; i++) WalkNodes(Child(t, i), depth + 1, out);
+}
+
+// Узел видимой правой руки: по имени (по порядку) и с PoseInterpolator; без типа PoseInterpolator —
+// самый глубокий узел с таким именем (трекер контроллера с тем же именем у Styx лежит выше руки)
+Il2CppObject* FindRightHand(Il2CppObject* classObject) {
+  std::vector<HandNode> nodes;
+  WalkNodes(TransformOf(classObject), 0, nodes);
+  for (char const* name : {"Right Hand Anchor", "Railgun Pose", "Right Arm", "Right Hand"}) {
+    Il2CppObject* best = nullptr;
+    int bestDepth = -1;
+    for (auto& n : nodes) {
+      if (n.name != name) continue;
+      if (gPoseInterpolatorType) {
+        if (Component(GameObjectOf(n.t), gPoseInterpolatorType)) return n.t;
+      } else if (n.depth > bestDepth) {
+        best = n.t;
+        bestDepth = n.depth;
+      }
+    }
+    if (best) return best;
+  }
+  return nullptr;
+}
+
+// Рука текущего класса (ищем заново, когда класс сменился или рука уничтожена); nullptr — луч от контроллера
+Il2CppObject* RightHand() {
+  if (!Alive(gLocal.cls.obj)) return nullptr;
+  if (gHandClass.obj != gLocal.cls.obj || (gRightHand.obj && !Alive(gRightHand.obj))) {
+    Free(gHandClass);
+    Free(gRightHand);
+    gHandClass = Hold(gLocal.cls.obj);
+    gRightHand = Hold(FindRightHand(gLocal.cls.obj));
+    gHandLogged = false;
+    LOG(ANDROID_LOG_INFO, "%s: рука для луча — %s", gLocal.key.c_str(),
+        gRightHand.obj ? NameOf(gRightHand.obj).c_str() : "не найдена, луч от контроллера");
+  }
+  return gRightHand.obj;
+}
+
+// Линия от a по направлению dir длиной len (0 — спрятать): отрезки тоньше и прозрачнее к концу
+void DrawRay(Vec3 a, Vec3 dir, float len, Vec3 camPos, float scale) {
+  if (!gRayRoot.obj || !gRaySegments[kRaySegments - 1] || !gMarkMeasured) return;
+  bool show = len > 0.02f * scale && Alive(gRayRoot.obj);
+  if (show != gRayShown && Alive(gRayRoot.obj)) {
+    gRayShown = show;
+    Invoke(gSetActive, gRayRoot.obj, &show);
+  }
+  if (!show) return;
+  float step = len / kRaySegments;
+  for (int i = 0; i < kRaySegments; i++) {
+    Vec3 c = a + dir * (step * (i + 0.5f));
+    Vec3 f = c - camPos;
+    f = Normalize(f - dir * Dot(f, dir));  // лицом к камере, длиной — вдоль луча
+    Quat rot = LookRotation(f, Cross(f, dir));
+    float width = scale * (kRayWidthStart + (kRayWidthEnd - kRayWidthStart) * i / (kRaySegments - 1));
+    Vec3 s{step / gMarkSize.x, width / gMarkSize.y, 1};
+    Vec3 p = c - Rotate(rot, Vec3{gMarkCenter.x * s.x, gMarkCenter.y * s.y, 0});
+    Call<void>(gSetPosition, gRayTransforms[i], p);
+    Call<void>(gSetRotation, gRayTransforms[i], rot);
+    Invoke(gSetLocalScale, gRayTransforms[i], &s);
+  }
 }
 
 void TickMenu() {
@@ -1293,7 +1819,7 @@ void TickMenu() {
   bool stick = Button(kLeftHand, gStickClick);
   if (stick && !gStickWas) {
     gMenuVisible = !gMenuVisible;
-    if (gMenuVisible) RefreshRows();
+    if (gMenuVisible) RefreshTiles();
     Invoke(gSetActive, gMenuRoot.obj, &gMenuVisible);
     Buzz(kLeftHand, 0.3f, 0.05f);
   }
@@ -1303,7 +1829,10 @@ void TickMenu() {
   bool triggerDown = trigger && !gTriggerWas;
   gTriggerWas = trigger;
   if (!gMenuVisible || !tracked) {
-    gHovered = {-1, 0};
+    gHovered = -1;
+    gHoverNav = 0;
+    gOnPanel = false;
+    DrawRay({}, {0, 0, 1}, 0, camPos, scale);
     return;
   }
 
@@ -1325,12 +1854,28 @@ void TickMenu() {
     gUsePointerPose = false;
     LOG(ANDROID_LOG_INFO, "нет PointerPosition — луч от рукоятки");
   }
-  Hit hovered{-2, 0};  // -2 — луч мимо панели
+  int count = TileCount();
+  int hovered = -1, hoverNav = 0;
+  bool onPanel = false;
   Vec3 cursor{0, 0, 0};
-  float top = 0.09f, bottom = RowY(static_cast<int>(gRows.size()) - 1) - kRowHeight / 2;
+  float bottom = PanelBottom(count);
+  float rayLength = 0;
+  Vec3 origin{}, dir{0, 0, 1};
   if (gUsePointerPose || Pose(kRightHand, gDevicePosition, gDeviceRotation, rayPos, rayRot)) {
-    Vec3 origin = rigPos + Rotate(rigRot, rayPos * scale);
-    Vec3 dir = Rotate(rigRot * rayRot, {0, 0, 1});
+    origin = rigPos + Rotate(rigRot, rayPos * scale);
+    dir = Rotate(rigRot * rayRot, {0, 0, 1});
+    // Луч — из видимой руки класса, направление — как у контроллера
+    if (auto hand = RightHand()) {
+      Vec3 handPos = Call<Vec3>(gGetPosition, hand);
+      if (!gHandLogged) {
+        gHandLogged = true;
+        Vec3 d = handPos - origin;
+        LOG(ANDROID_LOG_INFO, "%s: рука от контроллера %.2f м, масштаб %.2f", gLocal.key.c_str(),
+            std::sqrt(Dot(d, d)), scale);
+      }
+      origin = handPos;
+    }
+    rayLength = kRayIdleLength * scale;
     Vec3 normal = Rotate(panelRot, {0, 0, 1});
     float denom = Dot(dir, normal);
     if (std::fabs(denom) > 1e-4f) {
@@ -1338,24 +1883,42 @@ void TickMenu() {
       Vec3 hit = origin + dir * t - panelPos;
       float x = Dot(hit, Rotate(panelRot, {1, 0, 0})) / scale;
       float y = Dot(hit, Rotate(panelRot, {0, 1, 0})) / scale;
-      if (t > 0.f && std::fabs(x) < kPanelWidth / 2 && y < top && y > bottom) {
+      if (t > 0.f && std::fabs(x) < kPanelWidth / 2 && y < kPanelTop && y > bottom) {
         cursor = {x, y, -0.003f};
-        hovered = {-1, 1};  // на панели, но не на кнопке — курсор всё равно показываем
-        for (int r = 0; r < static_cast<int>(gRows.size()); r++)
-          for (int k : {1, 3}) {
-            Vec3 p = gTextPos[kRowTexts + r * kTextsPerRow + k];
-            if (std::fabs(x - p.x) < 0.016f && std::fabs(y - p.y) < kRowHeight / 2) hovered = {r, k == 1 ? -1 : 1};
-          }
+        onPanel = true;
+        rayLength = t - kRayGap * scale;
+        for (int i = 0; i < std::min(kMaxTiles, count - gPage * kMaxTiles); i++) {
+          Vec3 p = TilePos(i);
+          if (std::fabs(x - p.x) < kTileWidth / 2 && std::fabs(y - p.y) < kTileHeight / 2) hovered = i;
+        }
+        // Стрелки страниц — только те, что нажимаются (не у края)
+        int pages = PageCount(count);
+        if (pages > 1 && std::fabs(y - kNavY) < kNavHeight / 2)
+          for (int side : {-1, 1})
+            if (std::fabs(x - side * kNavX) < kNavWidth / 2 && gPage + side >= 0 && gPage + side < pages)
+              hoverNav = side;
       }
     }
   }
-  if (hovered.row >= 0 && (hovered.row != gHovered.row || hovered.step != gHovered.step)) Buzz(kRightHand, 0.1f, 0.01f);
-  gHovered = hovered.row == -2 ? Hit{-1, 0} : hovered;
-  if (gHovered.step != 0) Call<void>(gSetPosition, gCursorTransform, panelPos + Rotate(panelRot, cursor * scale));
+  float start = kRayStart * scale;
+  DrawRay(origin + dir * start, dir, rayLength - start, camPos, scale);
+  if ((hovered >= 0 && hovered != gHovered) || (hoverNav && hoverNav != gHoverNav)) Buzz(kRightHand, 0.1f, 0.01f);
+  gHovered = hovered;
+  gHoverNav = hoverNav;
+  gOnPanel = onPanel;
+  if (onPanel) {
+    gCursorLocal = cursor;
+    Call<void>(gSetPosition, gCursorTransform, panelPos + Rotate(panelRot, cursor * scale));
+  }
 
-  if (triggerDown && gHovered.row >= 0) {
+  if (triggerDown && gHovered >= 0) {
     Buzz(kRightHand, 0.4f, 0.05f);
-    Step(gRows[gHovered.row], gHovered.step);
+    Pick(gPage * kMaxTiles + gHovered);
+  } else if (triggerDown && gHoverNav) {
+    Buzz(kRightHand, 0.3f, 0.04f);
+    gPage += gHoverNav;
+    gHovered = -1;
+    gHoverNav = 0;  // у края стрелка гаснет — подсветку снимаем сразу
   }
   UpdateTexts();
 }
@@ -1379,7 +1942,7 @@ void Tick() {
       gLocal.cls = Hold(go);
       gLocal.key = ClassKeyOf(go);
       Wear(gLocal, Selected(gLocal.key), "свой");
-      if (gMenuVisible) RefreshRows();
+      if (gMenuVisible) RefreshTiles();
     }
   }
 
@@ -1458,6 +2021,35 @@ bool InitMenu(Il2CppImage const* core) {
                  gGetDeviceId, gGetButton, gGetVec3, gGetQuat, gSetText, gSetFontSize, gSetAlignment, gSetWrapping,
                  gSetFont})
     if (!m) return false;
+
+  // Фон меню — необязательный: без границ меша или порядка отрисовки остаются одни надписи
+  auto mesh = il2cpp_class_from_name(core, "UnityEngine", "Mesh");
+  auto renderer = il2cpp_class_from_name(core, "UnityEngine", "Renderer");
+  gTextBounds = Method(tmpText, "get_bounds", 0, false);
+  gMeshBounds = mesh ? Method(mesh, "get_bounds", 0, false) : nullptr;
+  gTmpSortingOrder = Method(textMeshPro, "set_sortingOrder", 1, false);
+  gRendererSortingOrder = renderer ? Method(renderer, "set_sortingOrder", 1, false) : nullptr;
+  auto rectTransform = il2cpp_class_from_name(core, "UnityEngine", "RectTransform");
+  gSetSizeDelta = rectTransform ? Method(rectTransform, "set_sizeDelta", 1) : nullptr;  // без него — класс по центру
+  // Пиксельный шрифт меню — тоже необязательный
+  auto tmpAsset = il2cpp_class_from_name(tmp, "TMPro", "TMP_Asset");
+  auto material = il2cpp_class_from_name(core, "UnityEngine", "Material");
+  gFontMaterial = tmpAsset ? Method(tmpAsset, "get_material", 0) : nullptr;
+  gGetShader = material ? Method(material, "get_shader", 0) : nullptr;
+  gSetShader = material ? Method(material, "set_shader", 1) : nullptr;
+  // PoseInterpolator — компонент видимых рук классов; пространство имён в ПК-сборках не видно — перебираем
+  if (auto dust = FindImage("Dust.dll"))
+    for (char const* ns : {"Dust", "Dust.Combat", "Dust.Physics", "Dust.Networking", "Dust.Utilities", ""})
+      if (auto pose = il2cpp_class_from_name(dust, ns, "PoseInterpolator")) {
+        gPoseInterpolatorType = TypeOf(pose);
+        LOG(ANDROID_LOG_INFO, "PoseInterpolator: %s", *ns ? ns : "(без пространства имён)");
+        break;
+      }
+  if (!gPoseInterpolatorType) LOG(ANDROID_LOG_WARN, "нет PoseInterpolator — рука для луча по имени и глубине");
+  gHasBackground = (gTextBounds || gMeshBounds) && (gTmpSortingOrder || gRendererSortingOrder);
+  LOG(gHasBackground ? ANDROID_LOG_INFO : ANDROID_LOG_WARN, "фон меню: границы %s, порядок %s",
+      gTextBounds ? "TMP_Text.bounds" : gMeshBounds ? "Mesh.bounds" : "нет",
+      gTmpSortingOrder ? "TextMeshPro.sortingOrder" : gRendererSortingOrder ? "Renderer.sortingOrder" : "нет");
 
   gTextMeshProType = TypeOf(textMeshPro);
   gFontAssetType = TypeOf(fontAsset);

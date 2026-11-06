@@ -49,6 +49,14 @@
     {
       "name": "Sunset.skin",
       "destination": "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/Sunset.skin"
+    },
+    {
+      "name": "MenuFont.font",
+      "destination": "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/MenuFont.font"
+    },
+    {
+      "name": "PixelifySans-OFL.txt",
+      "destination": "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/PixelifySans-OFL.txt"
     }
   ],
   "copyExtensions": []
