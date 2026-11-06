@@ -55,6 +55,10 @@
       "destination": "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/Heavy Machinery.skin"
     },
     {
+      "name": "Nerd.skin",
+      "destination": "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/Nerd.skin"
+    },
+    {
       "name": "MenuFont.font",
       "destination": "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/MenuFont.font"
     },
