@@ -1011,6 +1011,8 @@ void Publish() {
   // Первая запись после появления класса бывает, что теряется, — ругаемся, только если не выходит подряд
   if (gSelfCheck > 0 && --gSelfCheck == 0) {
     if (ReadProperty(gSentKey) == gSentValue) {
+      if (gSelfCheckFails >= kSelfCheckTries)  // раньше ругались — скажем, что наладилось
+        LOG(ANDROID_LOG_INFO, "сервер сохранил выбор скина с %d-й попытки — другие игроки с модом его увидят", gSelfCheckFails + 1);
       gSelfCheckFails = 0;
     } else {
       if (++gSelfCheckFails == kSelfCheckTries)
