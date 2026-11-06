@@ -51,6 +51,10 @@
       "destination": "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/Sunset.skin"
     },
     {
+      "name": "Heavy Machinery.skin",
+      "destination": "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/Heavy Machinery.skin"
+    },
+    {
       "name": "MenuFont.font",
       "destination": "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/MenuFont.font"
     },
