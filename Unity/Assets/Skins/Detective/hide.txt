@@ -3,4 +3,3 @@ Fin LU
 Fin RU
 Antenna 0
 Antenna 1
-Witch Hat
