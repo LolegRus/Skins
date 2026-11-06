@@ -9,7 +9,7 @@
 ## Что умеет
 
 - **Новый вид** — меняет модель твоего персонажа на скин из файла
-- **Свой скин для каждого класса** — в меню видны классы для ПК (Scarab и Drone), мод запоминает выбор и надевает его сам
+- **Свой скин для каждого класса** — в меню видны скины класса, за который ты играешь, у каждого своя кнопка; мод запоминает выбор и надевает его сам
 - **Цвета игры остаются** — цвет команды, вспышка от попадания и оружие работают как раньше
 - **Видно другим** — игроки с этим модом видят твой скин, а ты — их, и на ПК, и на Quest
 
@@ -27,6 +27,7 @@
   как детали персонажа в игре (`Head`, `Body`, `Left Hand`, `LH Carbine`…), а менять в Blender можно
   только саму форму, не положение объектов. Чтобы убрать деталь игры (например, `BodyHipSegment`),
   впиши её имя в файл `hide.txt` рядом с моделью. Скин соберётся сразу для ПК и для Quest.
+- Меню на Quest написано шрифтом [Pixelify Sans](https://github.com/eifetx/Pixelify-Sans) (лицензия SIL OFL 1.1).
 
 </details>
 
@@ -35,8 +36,8 @@
 | Клавиша | Что делает |
 |---|---|
 | F2 | Открыть или закрыть меню скинов (слева сверху) |
-| ↑ ↓ | В меню: выбрать класс |
-| ← → | В меню: сменить скин (после последнего — обычный вид) |
+| Клик / 1–4 | В меню: надеть скин (первая кнопка — обычный вид) |
+| ← → | В меню: другая страница скинов (если их больше четырёх) |
 | Ctrl+F11 | Записать устройство всех классов в `UserData\Skins\Dumps` (для тех, кто делает скины) |
 
 ## Установка
@@ -71,8 +72,8 @@
 > Если DUST обновится из магазина, моды перестанут работать. Просто повтори шаг 5 — сами моды ставить заново не нужно.
 
 
-> На Quest меню открывается нажатием **левого стика**: над левой рукой появится список классов.
-> Наведи правый контроллер на `<` или `>` у класса и нажми курок. Скины Cowboy, Dark Knight, Enforcer, Gear, Code Breaker, Ninja, Hound и Sunset уже лежат в моде.
+> На Quest меню открывается нажатием **левого стика**: над левой рукой появятся скины класса, за который ты играешь.
+> Наведи правый контроллер на скин и нажми курок. Скины Cowboy, Dark Knight, Enforcer, Gear, Code Breaker, Ninja, Hound и Sunset уже лежат в моде.
 
 ## Сборка из исходников
 
@@ -94,7 +95,7 @@ dotnet build Skins/Skins.csproj -c Release -p:DustPath="D:\Games\Dust 0.8.4"
 ## What it does
 
 - **New look** — swaps your character's model for a skin from a file
-- **A skin for every class** — the menu shows the PC classes (Scarab and Drone), the mod remembers your pick and puts it on by itself
+- **A skin for every class** — the menu shows the skins of the class you play, each with its own button; the mod remembers your pick and puts it on by itself
 - **Game colors stay** — team color, the hit flash and the weapons work just like before
 - **Others see it** — players with this mod see your skin, and you see theirs, both on PC and on Quest
 
@@ -112,6 +113,7 @@ dotnet build Skins/Skins.csproj -c Release -p:DustPath="D:\Games\Dust 0.8.4"
   like the character's parts in the game (`Head`, `Body`, `Left Hand`, `LH Carbine`…), and in Blender change
   only the shapes, not where the objects are. To remove a part of the game (like `BodyHipSegment`),
   write its name into a `hide.txt` file next to the model. The skin is built for both PC and Quest at once.
+- The Quest menu uses the [Pixelify Sans](https://github.com/eifetx/Pixelify-Sans) font (SIL OFL 1.1 license).
 
 </details>
 
@@ -120,8 +122,8 @@ dotnet build Skins/Skins.csproj -c Release -p:DustPath="D:\Games\Dust 0.8.4"
 | Key | What it does |
 |---|---|
 | F2 | Open or close the skin menu (top left) |
-| ↑ ↓ | In the menu: pick a class |
-| ← → | In the menu: change the skin (after the last one — the normal look) |
+| Click / 1–4 | In the menu: put on a skin (the first button is the normal look) |
+| ← → | In the menu: another page of skins (when there are more than four) |
 | Ctrl+F11 | Write how all classes are built into `UserData\Skins\Dumps` (for skin makers) |
 
 ## Installation
@@ -156,8 +158,8 @@ The mod also works on the Quest headset on its own. You only need a computer onc
 > If DUST updates from the store, mods stop working. Just do step 5 again — you don't need to install the mods again.
 
 
-> On Quest, press the **left stick** to open the menu: a list of classes shows up above your left hand.
-> Point the right controller at `<` or `>` next to a class and pull the trigger. The Cowboy, Dark Knight, Enforcer, Gear, Code Breaker, Ninja, Hound and Sunset skins come with the mod.
+> On Quest, press the **left stick** to open the menu: the skins of the class you play show up above your left hand.
+> Point the right controller at a skin and pull the trigger. The Cowboy, Dark Knight, Enforcer, Gear, Code Breaker, Ninja, Hound and Sunset skins come with the mod.
 
 ## Building from source
 

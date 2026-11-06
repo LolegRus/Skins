@@ -149,22 +149,63 @@ namespace Skins
                 string path = Path.Combine(Folder, resource.Substring(BuiltinPrefix.Length));
                 try
                 {
-                    byte[] bytes;
-                    using (Stream res = asm.GetManifestResourceStream(resource))
-                    using (var ms = new MemoryStream())
-                    {
-                        res.CopyTo(ms);
-                        bytes = ms.ToArray();
-                    }
-                    if (File.Exists(path) && File.ReadAllBytes(path).AsSpan().SequenceEqual(bytes)) continue;
-                    File.WriteAllBytes(path, bytes);
-                    Core.Log.Msg($"Скин из мода выложен: {Path.GetFileName(path)}");
+                    if (Extract(resource, path)) Core.Log.Msg($"Скин из мода выложен: {Path.GetFileName(path)}");
                 }
                 catch (Exception e)
                 {
                     Core.Log.Error($"Скин из мода '{Path.GetFileName(path)}': {e.Message}");
                 }
             }
+        }
+
+        /// <summary>Ресурс DLL — в файл, если там его ещё нет или он другой. true — записан.</summary>
+        private static bool Extract(string resource, string path)
+        {
+            byte[] bytes;
+            using (Stream res = Assembly.GetExecutingAssembly().GetManifestResourceStream(resource))
+            using (var ms = new MemoryStream())
+            {
+                if (res == null) throw new FileNotFoundException("нет ресурса " + resource);
+                res.CopyTo(ms);
+                bytes = ms.ToArray();
+            }
+            if (File.Exists(path) && File.ReadAllBytes(path).AsSpan().SequenceEqual(bytes)) return false;
+            File.WriteAllBytes(path, bytes);
+            return true;
+        }
+
+        // ---- шрифт меню ----
+        // Pixelify Sans (лицензия SIL OFL 1.1): бандл с TTF зашит в DLL и выкладывается в папку скинов
+        // вместе с текстом лицензии. Собирает Unity\ (Tools → Skins → Build Menu Font).
+        private const string FontResource = "Skins.MenuFont.font";
+        private const string FontLicenseResource = "Skins.PixelifySans-OFL.txt";
+        private static Font _menuFont;
+        private static Bundle _fontBundle;
+        private static bool _fontFailed;
+
+        /// <summary>Пиксельный шрифт меню (null — не загрузился, меню пишет шрифтом по умолчанию).</summary>
+        internal static Font MenuFont()
+        {
+            if (_menuFont != null) return _menuFont;   // == у Unity-объекта учитывает и уничтоженный
+            if (_fontFailed) return null;
+            try
+            {
+                Directory.CreateDirectory(Folder);
+                string path = Path.Combine(Folder, "MenuFont.font");
+                Extract(FontResource, path);
+                Extract(FontLicenseResource, Path.Combine(Folder, "PixelifySans-OFL.txt"));
+                _fontBundle ??= Load(path);
+                if (_fontBundle == null) throw new Exception("бандл не загрузился");
+                _menuFont = LoadAsset<Font>(_fontBundle, "PixelifySans");
+                if (_menuFont == null) throw new Exception("нет шрифта в бандле");
+                _menuFont.hideFlags |= HideFlags.DontUnloadUnusedAsset;   // иначе игра выгрузит его при смене сцены
+            }
+            catch (Exception e)
+            {
+                _fontFailed = true;
+                Core.Log.Warning($"Шрифт меню: {e.Message} — шрифт по умолчанию");
+            }
+            return _menuFont;
         }
 
         private static Bundle Load(string path)

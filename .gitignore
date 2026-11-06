@@ -16,3 +16,9 @@ Unity/*.slnx
 Unity/.vscode/
 Unity/Assets/Skins/*/_build/
 Unity/Assets/Skins/*/_build.meta
+
+# TMP Essential Resources (импорт из пакета ugui) и собранный шрифт меню — генерируются
+Unity/Assets/TextMesh Pro/
+Unity/Assets/TextMesh Pro.meta
+Unity/Assets/Fonts/PixelifySans SDF.asset
+Unity/Assets/Fonts/PixelifySans SDF.asset.meta

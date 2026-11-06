@@ -28,7 +28,7 @@ namespace Skins
             Log = LoggerInstance;
             _prefs = MelonPreferences.CreateCategory("Skins");
             _menu = new SkinMenu(this);
-            Log.Msg($"Initialized. F2 — меню скинов, Ctrl+F11 — дамп классов. Скины: {SkinLibrary.Folder}");
+            Log.Msg($"Initialized. F2 — skins menu, Ctrl+F11 — dump classes. Skins folder: {SkinLibrary.Folder}");
         }
 
         public override void OnUpdate()
@@ -68,10 +68,18 @@ namespace Skins
             catch (Exception e) { Log.Error("Меню скинов: " + e); }
         }
 
+        private string _guiError;   // последняя ошибка отрисовки меню — пишем её один раз, со стеком
+
         public override void OnGUI()
         {
             try { _menu.Draw(); }
-            catch (Exception e) { Log.Error("Меню скинов: " + e.Message); }
+            catch (Exception e)
+            {
+                // OnGUI зовётся по несколько раз за кадр: без этого лог забивается одной и той же строкой
+                if (e.Message == _guiError) return;
+                _guiError = e.Message;
+                Log.Error("Меню скинов (повторы не пишутся): " + e);
+            }
         }
 
         /// <summary>Выбор скина для класса (null — родной вид). Текущий класс переодевается сразу.</summary>
@@ -79,7 +87,7 @@ namespace Skins
         {
             Entry(key).Value = skinName ?? Original;
             _prefs.SaveToFile(false);
-            Log.Msg($"{Title(key)}: {skinName ?? "родной вид"}");
+            Log.Msg($"{Title(key)}: {skinName ?? "original"}");
             if (_class != null && KeyOf(_class) == key) Wear(_class, skinName ?? Original);
         }
 
