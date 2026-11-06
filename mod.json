@@ -63,6 +63,10 @@
       "destination": "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/Neo.skin"
     },
     {
+      "name": "Detective.skin",
+      "destination": "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/Detective.skin"
+    },
+    {
       "name": "MenuFont.font",
       "destination": "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/MenuFont.font"
     },
