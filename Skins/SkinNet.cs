@@ -99,7 +99,12 @@ namespace Skins
             if (_selfCheckAt > 0f && Time.unscaledTime >= _selfCheckAt)
             {
                 _selfCheckAt = -1f;
-                if (Read(_sentKey) == _sentValue) _selfCheckFails = 0;
+                if (Read(_sentKey) == _sentValue)
+                {
+                    if (_selfCheckFails >= SelfCheckTries)   // раньше ругались — скажем, что наладилось
+                        Core.Log.Msg($"Сервер сохранил выбор скина с {_selfCheckFails + 1}-й попытки — другие игроки с модом его увидят.");
+                    _selfCheckFails = 0;
+                }
                 else
                 {
                     if (++_selfCheckFails == SelfCheckTries)
