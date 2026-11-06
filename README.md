@@ -17,7 +17,7 @@
 <summary>Подробнее</summary>
 
 - Скины — это файлы `.skin` в папке игры `UserData\Skins`. Положи туда файл, и скин появится в списке.
-  Скины **Cowboy** для Kobold, **Dark Knight** для Sparrow, **Enforcer** для Roller, **Gear** для Reaper, **Code Breaker** для Seraph, **Ninja** для Grappler, **Hound** для Assassin, **Sunset** для Crossbolt, **Heavy Machinery** для Scarab, **Nerd** для Boulder и **Neo** для Jacket идут вместе с модом и появятся там сами.
+  Скины **Cowboy** для Kobold, **Dark Knight** для Sparrow, **Enforcer** для Roller, **Gear** для Reaper, **Code Breaker** для Seraph, **Ninja** для Grappler, **Hound** для Assassin, **Sunset** для Crossbolt, **Heavy Machinery** для Scarab, **Nerd** для Boulder, **Neo** для Jacket и **Detective** для Drone идут вместе с модом и появятся там сами.
 - Kobold, Sparrow, Roller, Reaper, Seraph, Grappler, Assassin, Crossbolt, Boulder, Jacket и другие классы, кроме Scarab и Drone, — для VR. На ПК их нет в меню,
   но их скины ты увидишь на игроках в шлеме, у которых стоит мод.
 - Чтобы другой игрок увидел твой скин, у него должен стоять этот мод и лежать тот же файл скина.
@@ -73,7 +73,7 @@
 
 
 > На Quest меню открывается нажатием **левого стика**: над левой рукой появятся скины класса, за который ты играешь.
-> Наведи правый контроллер на скин и нажми курок. Скины Cowboy, Dark Knight, Enforcer, Gear, Code Breaker, Ninja, Hound, Sunset, Heavy Machinery, Nerd и Neo уже лежат в моде.
+> Наведи правый контроллер на скин и нажми курок. Скины Cowboy, Dark Knight, Enforcer, Gear, Code Breaker, Ninja, Hound, Sunset, Heavy Machinery, Nerd, Neo и Detective уже лежат в моде.
 
 ## Сборка из исходников
 
@@ -103,7 +103,7 @@ dotnet build Skins/Skins.csproj -c Release -p:DustPath="D:\Games\Dust 0.8.4"
 <summary>More details</summary>
 
 - Skins are `.skin` files in the game's `UserData\Skins` folder. Drop a file there and the skin shows up in the list.
-  The **Cowboy** skin for Kobold, the **Dark Knight** skin for Sparrow, the **Enforcer** skin for Roller, the **Gear** skin for Reaper, the **Code Breaker** skin for Seraph, the **Ninja** skin for Grappler, the **Hound** skin for Assassin, the **Sunset** skin for Crossbolt, the **Heavy Machinery** skin for Scarab, the **Nerd** skin for Boulder and the **Neo** skin for Jacket come with the mod and show up there by themselves.
+  The **Cowboy** skin for Kobold, the **Dark Knight** skin for Sparrow, the **Enforcer** skin for Roller, the **Gear** skin for Reaper, the **Code Breaker** skin for Seraph, the **Ninja** skin for Grappler, the **Hound** skin for Assassin, the **Sunset** skin for Crossbolt, the **Heavy Machinery** skin for Scarab, the **Nerd** skin for Boulder, the **Neo** skin for Jacket and the **Detective** skin for Drone come with the mod and show up there by themselves.
 - Kobold, Sparrow, Roller, Reaper, Seraph, Grappler, Assassin, Crossbolt, Boulder, Jacket and the other classes except Scarab and Drone are for VR. On PC they are not in the menu,
   but you see their skins on headset players who have the mod.
 - For another player to see your skin, they need this mod and the same skin file.
@@ -159,7 +159,7 @@ The mod also works on the Quest headset on its own. You only need a computer onc
 
 
 > On Quest, press the **left stick** to open the menu: the skins of the class you play show up above your left hand.
-> Point the right controller at a skin and pull the trigger. The Cowboy, Dark Knight, Enforcer, Gear, Code Breaker, Ninja, Hound, Sunset, Heavy Machinery, Nerd and Neo skins come with the mod.
+> Point the right controller at a skin and pull the trigger. The Cowboy, Dark Knight, Enforcer, Gear, Code Breaker, Ninja, Hound, Sunset, Heavy Machinery, Nerd, Neo and Detective skins come with the mod.
 
 ## Building from source
 
