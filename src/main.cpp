@@ -14,8 +14,8 @@
 // наведи правый контроллер и жми курок. Выбор пишется в
 // kSkinDir/skins.cfg («KOBOLD=Cowboy», пусто — родной вид); без строки — первый скин класса.
 // Свой класс — CombatClass, у которого в имени объекта «Local» («Kobold (Local) Variant(Clone)»,
-// «Grappler Local Variant(Clone)»), ключ класса — первые буквы имени.
-// Скины других игроков с модом — через свойства сессии, как на ПК (см. «сеть»).
+// «Grappler Local Variant(Clone)»), ключ класса — CombatClass.classType, как на ПК.
+// Скины других игроков с модом — RPC-пакетами, как на ПК (см. «сеть»).
 // Вместо OnUpdate — хук на RenderPipelineManager.DoRenderLoop_Internal.
 
 #include <android/log.h>
@@ -23,12 +23,15 @@
 #include <dlfcn.h>
 
 #include <algorithm>
+#include <atomic>
 #include <cctype>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <ctime>
 #include <fstream>
 #include <map>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -358,16 +361,13 @@ MethodInfo const* gLoadAsset;   // AssetBundle.LoadAsset(string, Type) или Lo
 void* (*gLoadAssetIcall)(void*, Span*, Il2CppObject*);
 size_t gCachedPtrOffset;
 
-// Сеть: свойства сессии и сетевой ID экземпляра класса (как на ПК)
+// Сеть: RPC-пакеты со своего CombatClass и хук на NetworkComponent.OnReceive (как на ПК)
 MethodInfo const* gHasId;
-MethodInfo const* gObjectIdString;
 MethodInfo const* gIsOwned;
 MethodInfo const* gGetClient;
 MethodInfo const* gOfflineMode;  // Matchmaker.offlineMode — статическое; геттер в сборке для Quest вырезан,
 FieldInfo* gOfflineField;        // тогда читаем само поле
 void (*il2cpp_field_static_get_value)(FieldInfo*, void*);
-MethodInfo const* gSetProperty;
-MethodInfo const* gTryGetProperty;
 
 // XR и TextMeshPro — для меню
 MethodInfo const* gGetDeviceId;
@@ -435,8 +435,8 @@ Il2CppObject* FindFirst(Il2CppObject* type) {
 // ---------- скины ----------
 
 // Ключи классов игры (у ПК-версии они из реестра классов; на Quest — по дампу ПК)
-char const* const kClassKeys[] = {"ASSASSIN", "BOULDER", "CROSSBOLT", "GOLEM", "GRAPPLER", "JACKET", "KOBOLD",
-                                  "REAPER",   "ROLLER",  "SCARAB",    "SERAPH", "SPARROW", "STYX"};
+char const* const kClassKeys[] = {"ASSASSIN", "BOULDER", "CROSSBOLT", "DRONE",   "GOLEM",  "GRAPPLER", "JACKET",
+                                  "KOBOLD",   "REAPER",  "ROLLER",    "SCARAB", "SERAPH", "SPARROW",  "STYX"};
 
 struct SkinFile {
   std::string name;  // имя файла без .skin — так скин зовут в skins.cfg и в сети
@@ -881,13 +881,53 @@ bool Sync(Applied& a) {
 }
 
 // Ключ класса — первые буквы имени объекта: «Kobold (Local) Variant(Clone)» → KOBOLD
+// Ключ класса — как на ПК: имя значения CombatClass.classType заглавными (KOBOLD, DRONE…). Имя объекта
+// не годится: у дрона оно «Spectator Drone (Local) Variant». classType = Custom (так у Styx) или поле не
+// нашлось — тогда первое слово имени объекта («Styx (Local) Variant» → STYX)
+size_t gClassTypeOffset;
+std::map<int32_t, std::string> gClassTypeNames;
+
 std::string ClassKeyOf(Il2CppObject* go) {
+  if (gClassTypeOffset)
+    if (auto cc = Component(go, gCombatClassType)) {
+      int32_t value = *reinterpret_cast<int32_t*>(reinterpret_cast<char*>(cc) + gClassTypeOffset);
+      auto it = gClassTypeNames.find(value);
+      if (it != gClassTypeNames.end() && it->second != "CUSTOM") return it->second;
+    }
   std::string name = NameOf(go), key;
   for (char c : name) {
     if (!isalpha(static_cast<unsigned char>(c))) break;
     key += static_cast<char>(toupper(static_cast<unsigned char>(c)));
   }
   return key;
+}
+
+// Имена значений enum ClassType — из метаданных (статические поля-константы)
+void LoadClassTypeNames(Il2CppClass* combatClass) {
+  auto lib = modloader_libil2cpp_handle;
+  auto getFields = reinterpret_cast<FieldInfo* (*)(Il2CppClass*, void**)>(dlsym(lib, "il2cpp_class_get_fields"));
+  auto fieldName = reinterpret_cast<char const* (*)(FieldInfo*)>(dlsym(lib, "il2cpp_field_get_name"));
+  auto fieldFlags = reinterpret_cast<int (*)(FieldInfo*)>(dlsym(lib, "il2cpp_field_get_flags"));
+  auto fieldType = reinterpret_cast<Il2CppType const* (*)(FieldInfo*)>(dlsym(lib, "il2cpp_field_get_type"));
+  auto staticValue = reinterpret_cast<void (*)(FieldInfo*, void*)>(dlsym(lib, "il2cpp_field_static_get_value"));
+  auto field = il2cpp_class_get_field_from_name(combatClass, "classType");
+  if (!getFields || !fieldName || !fieldFlags || !fieldType || !staticValue || !field) {
+    LOG(ANDROID_LOG_WARN, "нет CombatClass.classType — ключ класса по имени объекта (дрон не распознается)");
+    return;
+  }
+  auto enumClass = il2cpp_class_from_type(fieldType(field));
+  void* iter = nullptr;
+  while (auto f = enumClass ? getFields(enumClass, &iter) : nullptr) {
+    constexpr int kStatic = 0x10, kLiteral = 0x40;
+    if ((fieldFlags(f) & (kStatic | kLiteral)) != (kStatic | kLiteral)) continue;  // value__ — не константа
+    int32_t value = 0;
+    staticValue(f, &value);
+    std::string name = fieldName(f);
+    for (auto& c : name) c = static_cast<char>(toupper(static_cast<unsigned char>(c)));
+    gClassTypeNames[value] = name;
+  }
+  if (gClassTypeNames.empty()) return;
+  gClassTypeOffset = il2cpp_field_get_offset(field);
 }
 
 bool IsOwned(Il2CppObject* classObject);
@@ -916,29 +956,90 @@ Il2CppObject* FindLocalClass() {
   return best;
 }
 
-// ---------- сеть: свойства сессии ----------
-// Как на ПК (SkinNet.cs): свой скин — в свойство «sk» + FNV-1a(сетевой ID экземпляра класса),
-// у чужих классов читаем это же свойство. Игроки без мода свойства не читают.
-// Пустую строку сервер не принимает (остаётся старое значение), поэтому родной вид — «-», а пустое
-// при чтении значит «данных нет»: чтение иногда на миг отдаёт пусто — скин от этого не снимаем,
-// иначе он мигает. Запись повторяем раз в kResendTicks: первая после появления класса бывает, что теряется.
+// ---------- сеть: RPC между игроками с модом ----------
+// Как на ПК (SkinNet.cs): пакет со своего CombatClass через NetworkComponent.SendRpc / SendRpcTo с номером
+// RPC 255 — у компонентов их не больше 254, и игра без мода такой пакет молча выбрасывает
+// (NetworkComponent.OnReceive: индекс ≥ числа RPC или > 254 — return). Мод ловит его хуком на OnReceive
+// до этой проверки. Пакет: [255]['S']['K'][версия][флаги][длина имени][имя UTF-8], пустое имя — родной вид.
+// Пришёл на чужой CombatClass — это скин этого экземпляра класса.
+// Кто с модом: раз в kHelloSeconds «привет» всем (со своим скином; внеочередной — через секунду после
+// появления своего класса или нового чужого, не чаще kHelloMinGap), на «привет» нового игрока отвечаем
+// ему лично; известным игрокам с модом шлём скин лично — сразу при смене (несколько раз) и раз в kPollSeconds.
 
-constexpr int kNetFrames = 60;      // сеть — раз в столько кадров
-constexpr size_t kMaxValueBytes = 63;  // буфер Matchmaker.TryGetProperty — 64 байта
-constexpr char kNormalValue[] = "-";   // родной вид
-constexpr int kResendTicks = 12;       // ~10 с
+constexpr int kNetFrames = 10;  // сеть — раз в столько кадров
+constexpr uint8_t kRpcIndex = 255;
+constexpr uint8_t kProtocol = 1;
+constexpr uint8_t kFlagHello = 1;
+constexpr size_t kHeaderBytes = 6;
+constexpr size_t kMaxSkinBytes = 64;
+constexpr double kHelloSeconds = 30, kPollSeconds = 5, kPeerTimeout = 40, kReplyCooldown = 2;
+constexpr double kBurstSeconds = 1, kScanSeconds = 1;
+constexpr double kHelloMinGap = 3, kHelloAfterSpawn = 1;
+constexpr int kBurstSends = 3;
+constexpr char kNothing[] = "\x01";  // «ещё ничего не слали»
 
-constexpr int kSelfCheckTicks = 3;  // через столько тиков сети читаем своё свойство обратно
+// ReadOnlySpan<byte> и DID — по 16 байт, в il2cpp передаются по значению
+struct NetSpan {
+  uint16_t start;
+  uint16_t length;
+  Il2CppObject* items;  // упакованный ByteList: после klass и monitor — uint8_t* ptr, int count
+};
+struct NetDid {
+  uint8_t b[16];
+};
+
+struct Peer {
+  NetDid id;
+  double lastHeard = 0;
+  double lastReply = -1e9;
+};
+struct Incoming {
+  Il2CppObject* component;  // чужой CombatClass
+  NetDid sender;
+  std::string skin;
+  bool hello;
+};
 
 Held gNetworkManager, gMatchmaker;
-std::string gSentKey, gSentValue;
-int gResend;  // тиков до повтора записи
 bool gNetFailed;
 std::string gNetState;  // последнее состояние сети в логе — пишем только смены
-int gSelfCheck = -1;    // тиков до самопроверки (-1 — не нужна)
-int gSelfCheckFails;
-constexpr int kSelfCheckTries = 3;
-std::string gLoggedValue;  // что последним написали в лог
+std::mutex gInboxLock;
+std::vector<Incoming> gInbox;
+std::map<std::string, Peer> gPeers;               // по 16 байтам DID
+// CombatClass → скин, который объявил владелец. Забываем, только если класса не видно kAnnouncedTtl:
+// FindObjectsByType не отдаёт выключенные объекты, а класс бывает выключен на миг
+struct Announced {
+  std::string skin;
+  double seen;
+};
+constexpr double kAnnouncedTtl = 60;
+std::map<Il2CppObject*, Announced> gAnnounced;
+std::atomic<int> gOtherVersion{-1};  // версия чужого протокола из пакета (-1 — не было)
+int gReportedVersion = -1;
+Il2CppObject* gSentInstance;
+std::string gSentSkin = kNothing, gLoggedSkin = kNothing;
+double gNextHello, gNextPoll, gNextBurst, gNextScan;
+double gLastHello = -1e9;
+
+// Внеочередной «привет» не позже at (kHelloMinGap держит Publish)
+void HelloSoon(double at) { gNextHello = std::min(gNextHello, at); }
+int gBurstLeft;
+
+MethodInfo const* gSendRpc;
+MethodInfo const* gSendRpcTo;
+MethodInfo const* gByteBufferCtor;
+MethodInfo const* gByteBufferAdd;  // Add(byte[])
+Il2CppClass* gByteClass;
+Il2CppArray* (*il2cpp_array_new)(Il2CppClass*, uintptr_t);
+Il2CppClass* gByteBufferClass;
+Il2CppClass* gByteListClass;
+uint8_t gPriorityLow;
+
+double Now() {
+  timespec ts;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  return ts.tv_sec + ts.tv_nsec * 1e-9;
+}
 
 void NetState(std::string const& state) {
   if (state == gNetState) return;
@@ -961,20 +1062,6 @@ float DistanceToCamera(Il2CppObject* classObject) {
   return std::sqrt(d.x * d.x + d.z * d.z);  // по горизонтали: камера — в голове, корень класса — у ног
 }
 
-// Ключ свойства для класса; "" — сетевого ID ещё нет
-std::string NetKey(Il2CppObject* classObject) {
-  auto np = Component(classObject, gNetworkPrefabType);
-  if (!np || !Unbox<bool>(Invoke(gHasId, np))) return "";
-  auto id = reinterpret_cast<Il2CppString*>(Invoke(gObjectIdString, np));
-  if (!id || il2cpp_string_length(id) == 0) return "";
-  uint32_t h = 2166136261u;  // FNV-1a по UTF-16, как string в C# на ПК
-  auto chars = il2cpp_string_chars(id);
-  for (int32_t i = 0, n = il2cpp_string_length(id); i < n; i++) h = (h ^ chars[i]) * 16777619u;
-  char buf[16];
-  snprintf(buf, sizeof(buf), "sk%08x", h);
-  return buf;
-}
-
 bool Session() {
   if (!Alive(gNetworkManager.obj)) {
     Free(gNetworkManager);
@@ -994,55 +1081,130 @@ bool Session() {
   return !offline && Invoke(gGetClient, gNetworkManager.obj) != nullptr;
 }
 
-std::string ReadProperty(std::string const& key) {
-  Il2CppString* value = nullptr;
-  auto ok = Invoke(gTryGetProperty, gMatchmaker.obj, il2cpp_string_new(key.c_str()), &value);
-  return ok && Unbox<bool>(ok) && value ? ToUtf8(value) : "";
+void ResetSession() {
+  gPeers.clear();
+  gAnnounced.clear();
+  {
+    std::lock_guard<std::mutex> lock(gInboxLock);
+    gInbox.clear();
+  }
+  gSentInstance = nullptr;
+  gSentSkin = kNothing;
+  gNextHello = gNextPoll = 0;
+  gLastHello = -1e9;
+  gBurstLeft = 0;
 }
 
-void Publish() {
-  if (!Alive(gLocal.cls.obj)) return;  // между смертью и появлением — обычное дело
-  if (!Component(gLocal.cls.obj, gNetworkPrefabType)) return NetState("у своего класса нет NetworkPrefab — другие игроки скин не увидят");
-  std::string key = NetKey(gLocal.cls.obj);
-  if (key.empty()) return;  // сетевой ID выдают не сразу после появления
-  NetState("работает");
+// Свой CombatClass, если с него можно слать: сетевой, с ID. nullptr — нельзя
+Il2CppObject* SendingClass() {
+  if (!Alive(gLocal.cls.obj)) return nullptr;  // между смертью и появлением — обычное дело
+  auto np = Component(gLocal.cls.obj, gNetworkPrefabType);
+  if (!np) {
+    NetState("у своего класса нет NetworkPrefab — другие игроки скин не увидят");
+    return nullptr;
+  }
+  if (!Unbox<bool>(Invoke(gHasId, np))) return nullptr;  // сетевой ID выдают не сразу после появления
+  auto cc = Component(gLocal.cls.obj, gCombatClassType);
+  if (cc) NetState("работает");
+  return cc;
+}
 
-  // Самопроверка: держит ли сервер наше значение; не держит — сразу отправляем ещё раз.
-  // Первая запись после появления класса бывает, что теряется, — ругаемся, только если не выходит подряд
-  if (gSelfCheck > 0 && --gSelfCheck == 0) {
-    if (ReadProperty(gSentKey) == gSentValue) {
-      if (gSelfCheckFails >= kSelfCheckTries)  // раньше ругались — скажем, что наладилось
-        LOG(ANDROID_LOG_INFO, "сервер сохранил выбор скина с %d-й попытки — другие игроки с модом его увидят", gSelfCheckFails + 1);
-      gSelfCheckFails = 0;
-    } else {
-      if (++gSelfCheckFails == kSelfCheckTries)
-        LOG(ANDROID_LOG_WARN, "сервер не сохраняет выбор скина (%d раза подряд) — другие игроки могут его не увидеть", kSelfCheckTries);
-      gResend = 0;
-      gSelfCheck = kSelfCheckTicks;
+std::string LocalSkinForNet() { return gLocal.skin.size() <= kMaxSkinBytes ? gLocal.skin : ""; }
+
+// target — лично этому игроку, nullptr — всем
+void SendSkin(Il2CppObject* cc, NetDid const* target, bool hello, std::string const& skin) {
+  int capacity = static_cast<int>(kHeaderBytes + skin.size());
+  int headroom = 64;  // запас спереди — под номер компонента
+  auto packet = il2cpp_array_new(gByteClass, capacity);
+  auto buf = il2cpp_object_new(gByteBufferClass);
+  if (!packet || !buf) return;
+  auto data = reinterpret_cast<uint8_t*>(packet) + 4 * sizeof(void*);  // после klass, monitor, bounds, max_length
+  data[0] = kRpcIndex;
+  data[1] = 'S';
+  data[2] = 'K';
+  data[3] = kProtocol;
+  data[4] = hello ? kFlagHello : 0;
+  data[5] = static_cast<uint8_t>(skin.size());
+  memcpy(data + kHeaderBytes, skin.data(), skin.size());
+  Invoke(gByteBufferCtor, buf, &capacity, &headroom);
+  Invoke(gByteBufferAdd, buf, packet);  // одним вызовом
+
+  bool reliable = false;
+  if (target) Invoke(gSendRpcTo, cc, target, &gPriorityLow, &reliable, buf);
+  else Invoke(gSendRpc, cc, &gPriorityLow, &reliable, buf);
+}
+
+std::string PeerKey(NetDid const& id) { return std::string(reinterpret_cast<char const*>(id.b), sizeof(id.b)); }
+
+void Drain(Il2CppObject* cc, double now) {
+  std::vector<Incoming> batch;
+  {
+    std::lock_guard<std::mutex> lock(gInboxLock);
+    batch.swap(gInbox);
+  }
+  for (auto& m : batch) {
+    auto key = PeerKey(m.sender);
+    auto it = gPeers.find(key);
+    if (it == gPeers.end()) {
+      it = gPeers.emplace(key, Peer{m.sender}).first;
+      LOG(ANDROID_LOG_INFO, "найден игрок с модом (всего %zu)", gPeers.size());
     }
+    it->second.lastHeard = now;
+    gAnnounced[m.component] = {m.skin, now};
+    if (!m.hello || !cc || now - it->second.lastReply < kReplyCooldown) continue;
+    it->second.lastReply = now;
+    SendSkin(cc, &m.sender, false, LocalSkinForNet());
+  }
+}
+
+void Publish(Il2CppObject* cc, double now) {
+  std::string skin = LocalSkinForNet();
+  bool newInstance = cc != gSentInstance;
+  if (newInstance || skin != gSentSkin) {
+    gBurstLeft = kBurstSends;
+    gNextBurst = now;
+    if (skin != gLoggedSkin)  // новый экземпляр класса с тем же скином — не пишем
+      LOG(ANDROID_LOG_INFO, "другим игрокам с модом: %s", skin.empty() ? "родной вид" : skin.c_str());
+    gLoggedSkin = skin;
+    gSentInstance = cc;
+    gSentSkin = skin;
+    // Копия нового экземпляра у других появляется не сразу — «привет» в первый миг теряется
+    if (newInstance) HelloSoon(now + kHelloAfterSpawn);
   }
 
-  std::string skin = gLocal.skin.size() <= kMaxValueBytes ? gLocal.skin : "";
-  std::string value = skin.empty() ? kNormalValue : skin;
-  bool changed = key != gSentKey || value != gSentValue;
-  if (!changed && --gResend > 0) return;
-  if (!gSentKey.empty() && gSentKey != key)
-    Invoke(gSetProperty, gNetworkManager.obj, il2cpp_string_new(gSentKey.c_str()), il2cpp_string_new(kNormalValue));
-  Invoke(gSetProperty, gNetworkManager.obj, il2cpp_string_new(key.c_str()), il2cpp_string_new(value.c_str()));
-  gResend = kResendTicks;
-  if (!changed) return;  // повтор того же — без записи в лог
-  if (value != gLoggedValue)  // новый экземпляр класса с тем же скином — не пишем
-    LOG(ANDROID_LOG_INFO, "другим игрокам с модом: %s", skin.empty() ? "родной вид" : skin.c_str());
-  gLoggedValue = value;
-  gSentKey = key;
-  gSentValue = value;
-  gSelfCheck = kSelfCheckTicks;
+  if (now >= gNextHello && now - gLastHello >= kHelloMinGap) {
+    SendSkin(cc, nullptr, true, skin);
+    gLastHello = now;
+    gNextHello = now + kHelloSeconds;
+  }
+
+  bool due = false;
+  if (gBurstLeft > 0 && now >= gNextBurst) {
+    gBurstLeft--;
+    gNextBurst = now + kBurstSeconds;
+    due = true;
+  }
+  if (now >= gNextPoll) due = true;
+  if (!due) return;
+  gNextPoll = now + kPollSeconds;
+  for (auto& [key, peer] : gPeers) SendSkin(cc, &peer.id, false, skin);
 }
 
-void ScanRemotes() {
+void ExpirePeers(double now) {
+  for (auto it = gPeers.begin(); it != gPeers.end();) {
+    if (now - it->second.lastHeard > kPeerTimeout) {
+      it = gPeers.erase(it);
+      LOG(ANDROID_LOG_INFO, "игрок с модом пропал (осталось %zu)", gPeers.size());
+    } else {
+      ++it;
+    }
+  }
+}
+
+void ScanRemotes(double now) {
   int sortNone = 0;
   auto all = reinterpret_cast<Il2CppArray*>(Invoke(gFindObjects, nullptr, gCombatClassType, &sortNone));
-  std::vector<Il2CppObject*> seen;
+  std::vector<Il2CppObject*> seenGo;
   for (uint32_t i = 0; i < Length(all); i++) {
     auto cc = At(all, i);
     if (!Alive(cc)) continue;
@@ -1050,44 +1212,92 @@ void ScanRemotes() {
     if (go == gLocal.cls.obj) continue;
     auto np = Component(go, gNetworkPrefabType);
     if (!np || Unbox<bool>(Invoke(gIsOwned, np))) continue;  // свой (или не сетевой) класс
-    std::string key = NetKey(go);
-    if (key.empty()) continue;
-    seen.push_back(go);
+    seenGo.push_back(go);
 
     auto it = gRemotes.find(go);
     if (it == gRemotes.end()) {
       it = gRemotes.emplace(go, Applied{}).first;
       it->second.cls = Hold(go);
       it->second.key = ClassKeyOf(go);
+      // Новый чужой класс — может, это игрок с модом, который о нас ещё не знает
+      if (!gAnnounced.count(cc)) HelloSoon(now + kHelloAfterSpawn);
     }
-    std::string value = ReadProperty(key);
-    if (value.empty()) continue;  // данных нет (игрок без мода или свойство на миг не читается) — не трогаем
-    std::string skin = value == kNormalValue ? "" : value;
+    auto announced = gAnnounced.find(cc);
+    if (announced == gAnnounced.end()) continue;  // игрок без мода или ещё не прислал
+    announced->second.seen = now;
+    std::string skin = announced->second.skin;
     if (it->second.net == skin) continue;
-    bool news = !skin.empty() || (it->second.net != "\x01" && !it->second.net.empty());  // первое «-» — не новость
+    bool news = !skin.empty() || (it->second.net != kNothing && !it->second.net.empty());  // первое «родной вид» — не новость
     it->second.net = skin;  // скина нет у нас — тоже запоминаем, чтобы не пробовать каждый раз заново
     if (news) LOG(ANDROID_LOG_INFO, "другой игрок на %s: %s", it->second.key.c_str(), skin.empty() ? "родной вид" : skin.c_str());
     Wear(it->second, skin, "другой игрок");
   }
   for (auto it = gRemotes.begin(); it != gRemotes.end();) {
-    if (std::find(seen.begin(), seen.end(), it->first) == seen.end()) {
+    if (std::find(seenGo.begin(), seenGo.end(), it->first) == seenGo.end()) {
       Forget(it->second);
       it = gRemotes.erase(it);
     } else {
       ++it;
     }
   }
+  for (auto it = gAnnounced.begin(); it != gAnnounced.end();) {
+    if (now - it->second.seen > kAnnouncedTtl) it = gAnnounced.erase(it);
+    else ++it;
+  }
 }
 
 void TickNetwork() {
   if (gNetFailed) return;
   if (!Session()) {
-    gSentKey.clear();  // новая сессия — всё отправим заново
-    gSentValue.clear();
+    ResetSession();  // новая сессия — всё узнаем и отправим заново
     return;
   }
-  Publish();
-  ScanRemotes();
+  double now = Now();
+  int other = gOtherVersion.load();
+  if (other >= 0 && other != gReportedVersion) {
+    gReportedVersion = other;
+    LOG(ANDROID_LOG_WARN, "игрок с другой версией мода (протокол %d, у нас %d) — скины друг друга не видно", other,
+        kProtocol);
+  }
+  auto cc = SendingClass();
+  Drain(cc, now);
+  if (cc) Publish(cc, now);
+  ExpirePeers(now);
+  if (now < gNextScan) return;
+  gNextScan = now + kScanSeconds;
+  ScanRemotes(now);
+}
+
+// NetworkComponent.OnReceive(ReadOnlySpan<byte> message, DID sender) — для каждого RPC игры, поэтому
+// проверяем дёшево: наш пакет начинается с 255 'S' 'K'
+using OnReceiveFn = void (*)(Il2CppObject*, NetSpan, NetDid, MethodInfo const*);
+OnReceiveFn gOrigOnReceive;
+
+bool TakePacket(Il2CppObject* self, NetSpan const& message, NetDid const& sender) {
+  if (message.length < kHeaderBytes || !message.items ||
+      *reinterpret_cast<Il2CppClass**>(message.items) != gByteListClass)
+    return false;
+  auto raw = reinterpret_cast<char*>(message.items) + 2 * sizeof(void*);
+  auto data = *reinterpret_cast<uint8_t**>(raw);
+  int count = *reinterpret_cast<int32_t*>(raw + sizeof(void*));
+  if (!data || message.start + message.length > count) return false;
+  auto p = data + message.start;
+  if (p[0] != kRpcIndex || p[1] != 'S' || p[2] != 'K') return false;
+  if (p[3] != kProtocol) {
+    gOtherVersion.store(p[3]);  // пакет наш, но разобрать не можем — скажем в TickNetwork
+  } else {
+    size_t n = p[5];
+    if (kHeaderBytes + n <= message.length && n <= kMaxSkinBytes) {
+      std::lock_guard<std::mutex> lock(gInboxLock);
+      gInbox.push_back({self, sender, std::string(reinterpret_cast<char const*>(p + kHeaderBytes), n), (p[4] & kFlagHello) != 0});
+    }
+  }
+  return true;
+}
+
+void HookOnReceive(Il2CppObject* self, NetSpan message, NetDid sender, MethodInfo const* method) {
+  if (TakePacket(self, message, sender)) return;  // наш пакет — игре он не нужен
+  gOrigOnReceive(self, message, sender, method);
 }
 
 // ---------- меню (левый стик) ----------
@@ -2077,7 +2287,6 @@ bool InitNetwork() {
   if (!networkPrefab || !networkManager || !matchmaker) return false;
 
   gHasId = Method(networkPrefab, "get_HasId", 0);
-  gObjectIdString = Method(networkPrefab, "get_ObjectIdString", 0);
   gIsOwned = Method(networkPrefab, "get_IsOwned", 0);
   gGetClient = Method(networkManager, "get_Client", 0);
   gOfflineMode = Method(matchmaker, "get_offlineMode", 0, false);
@@ -2086,10 +2295,47 @@ bool InitNetwork() {
     il2cpp_field_static_get_value =
         reinterpret_cast<void (*)(FieldInfo*, void*)>(dlsym(modloader_libil2cpp_handle, "il2cpp_field_static_get_value"));
   }
-  gSetProperty = FindOverload(networkManager, "SetProperty", 2, "String", "String");
-  gTryGetProperty = Method(matchmaker, "TryGetProperty", 2);
-  for (auto m : {gHasId, gObjectIdString, gIsOwned, gGetClient, gSetProperty, gTryGetProperty})
+  auto networkComponent = Class(net, "Dust.Networking", "NetworkComponent");
+  auto packetPriority = Class(net, "Dust.Networking", "PacketPriority");
+  gByteListClass = Class(net, "", "ByteList");
+  gByteBufferClass = Class(FindImage("Dust.Serialisation.dll"), "Dust.Serialisation", "ByteBuffer");
+  if (!networkComponent || !packetPriority || !gByteListClass || !gByteBufferClass) return false;
+  gSendRpc = Method(networkComponent, "SendRpc", 3);
+  gSendRpcTo = Method(networkComponent, "SendRpcTo", 4);
+  auto onReceive = Method(networkComponent, "OnReceive", 2);
+  gByteBufferCtor = FindOverload(gByteBufferClass, ".ctor", 2, "Int32", "Int32");
+  gByteBufferAdd = FindOverload(gByteBufferClass, "Add", 1, "Byte[]");
+  gByteClass = Class(FindImage("mscorlib.dll"), "System", "Byte");
+  il2cpp_array_new =
+      reinterpret_cast<Il2CppArray* (*)(Il2CppClass*, uintptr_t)>(dlsym(modloader_libil2cpp_handle, "il2cpp_array_new"));
+  if (!gByteClass || !il2cpp_array_new) return false;
+  for (auto m : {gHasId, gIsOwned, gGetClient, gSendRpc, gSendRpcTo, onReceive, gByteBufferCtor, gByteBufferAdd})
     if (!m) return false;
+
+  // PacketPriority.LOW — статическое поле byte; нет его — геттер Low
+  if (!il2cpp_field_static_get_value)
+    il2cpp_field_static_get_value =
+        reinterpret_cast<void (*)(FieldInfo*, void*)>(dlsym(modloader_libil2cpp_handle, "il2cpp_field_static_get_value"));
+  auto lowField = il2cpp_class_get_field_from_name(packetPriority, "LOW");
+  if (lowField && il2cpp_field_static_get_value) {
+    il2cpp_field_static_get_value(lowField, &gPriorityLow);
+  } else if (auto getLow = Method(packetPriority, "get_Low", 0)) {
+    gPriorityLow = Unbox<uint8_t>(Invoke(getLow, nullptr));
+  } else {
+    return false;
+  }
+  LOG(ANDROID_LOG_INFO, "сеть: приоритет пакетов %u", gPriorityLow);
+
+  auto target = *reinterpret_cast<uint32_t* const*>(onReceive);
+  auto result = flamingo_install_hook(reinterpret_cast<void*>(&HookOnReceive), target,
+                                      reinterpret_cast<void**>(&gOrigOnReceive),
+                                      flamingo_make_name("Skins::NetworkComponent.OnReceive"));
+  if (result.result != FLAMINGO_INSTALL_OK) {
+    char buf[512];
+    flamingo_format_error(result.value.data, buf, sizeof(buf));
+    LOG(ANDROID_LOG_ERROR, "хук на NetworkComponent.OnReceive не поставлен: %s", buf);
+    return false;
+  }
 
   gNetworkPrefabType = TypeOf(networkPrefab);
   gNetworkManagerType = TypeOf(networkManager);
@@ -2209,6 +2455,7 @@ bool Init() {
   gRendererType = TypeOf(renderer);
   gGameObjectType = TypeOf(gGameObjectClass);
   gCombatClassType = TypeOf(combatClass);
+  LoadClassTypeNames(combatClass);
 
   // Движущиеся детали (ручки затвора Crossbolt Sunset): без них скин работает, детали просто стоят
   gGetLocalPosition = Method(transform, "get_localPosition", 0);
@@ -2264,7 +2511,7 @@ bool Init() {
 
 extern "C" __attribute__((visibility("default"))) void setup(CModInfo* info) {
   info->id = "skins";
-  info->version = "0.8.0";
+  info->version = "0.9.0";
   info->version_long = 0;
 }
 
