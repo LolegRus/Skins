@@ -1,0 +1,7 @@
+# Детали игры, которые этот скин прячет, — по одной на строку (имена как в дампе мода).
+Door Bottom
+Door Top
+Mudflap Bottom
+Mudflap Top
+Roller Bottom
+Roller Top

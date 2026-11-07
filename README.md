@@ -34,7 +34,7 @@
 
 ## Skins
 
-The mod comes with 12 skins. All the models are made by **Cinder**.
+The mod comes with 13 skins. All the models are made by **Cinder**.
 
 | Skin | Class | | Skin | Class |
 |---|---|---|---|---|
@@ -44,6 +44,7 @@ The mod comes with 12 skins. All the models are made by **Cinder**.
 | Gear | Reaper | | Nerd | Boulder |
 | Code Breaker | Seraph | | Neo | Jacket |
 | Ninja | Grappler | | Detective | Drone |
+| Observatory-49 | Golem | | | |
 
 On PC you can only play Scarab and Drone. You see the other classes' skins on players in VR headsets.
 
@@ -106,7 +107,7 @@ Something doesn't work, or you have an idea? Write to us on [Discord](https://di
 
 ## Скины
 
-В моде уже есть 12 скинов. Все модели сделал **Cinder**.
+В моде уже есть 13 скинов. Все модели сделал **Cinder**.
 
 | Скин | Класс | | Скин | Класс |
 |---|---|---|---|---|
@@ -116,6 +117,7 @@ Something doesn't work, or you have an idea? Write to us on [Discord](https://di
 | Gear | Reaper | | Nerd | Boulder |
 | Code Breaker | Seraph | | Neo | Jacket |
 | Ninja | Grappler | | Detective | Drone |
+| Observatory-49 | Golem | | | |
 
 На ПК можно играть только за Scarab и Drone. Скины других классов видно на игроках в VR-шлеме.
 
