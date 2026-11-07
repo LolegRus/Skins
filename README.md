@@ -1,177 +1,166 @@
 # Skins
 
-![DUST](https://img.shields.io/badge/DUST-0.8.4-1f6feb) ![MelonLoader](https://img.shields.io/badge/MelonLoader-0.7.x-8957e5) ![.NET](https://img.shields.io/badge/.NET-6.0-512bd4) ![Version](https://img.shields.io/badge/version-0.7.0-2ea043)
+![DUST](https://img.shields.io/badge/DUST-0.8.4-1f6feb) ![MelonLoader](https://img.shields.io/badge/MelonLoader-0.7.x-8957e5) ![Version](https://img.shields.io/badge/version-0.7.0-2ea043)
 
-**🇬🇧 English version is below — [jump to English](#english)**
+**🇷🇺 Русская версия ниже — [перейти](#русский)**
 
-> Свои модели для персонажей DUST — например, Kobold-ковбой.
+> New models for DUST characters. Other players with the mod see them too.
 
-## Что умеет
+### ⬇️ [Download for PC](https://github.com/LolegRus/Skins/releases/latest/download/Skins.dll) · [Download for Quest](https://github.com/LolegRus/Skins/releases/latest/download/Skins.qmod) · 💬 [Discord](https://discord.gg/KM5YC5FjH)
 
-- **Новый вид** — меняет модель твоего персонажа на скин из файла
-- **Свой скин для каждого класса** — в меню видны скины класса, за который ты играешь, у каждого своя кнопка; мод запоминает выбор и надевает его сам
-- **Цвета игры остаются** — цвет команды, вспышка от попадания и оружие работают как раньше
-- **Видно другим** — игроки с этим модом видят твой скин, а ты — их, и на ПК, и на Quest
+<p align="center">
+  <img src="media/before-after.png" alt="Kobold → Cowboy" width="600">
+</p>
 
-<details>
-<summary>Подробнее</summary>
+<table align="center">
+  <tr>
+    <td align="center"><img src="media/cowboy.gif" alt="Cowboy" width="240"><br><b>Cowboy</b><br><sub>Kobold</sub></td>
+    <td align="center"><img src="media/dark-knight.gif" alt="Dark Knight" width="240"><br><b>Dark Knight</b><br><sub>Sparrow</sub></td>
+    <td align="center"><img src="media/ninja.gif" alt="Ninja" width="240"><br><b>Ninja</b><br><sub>Grappler</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="media/heavy-machinery.gif" alt="Heavy Machinery" width="240"><br><b>Heavy Machinery</b><br><sub>Scarab</sub></td>
+    <td align="center"><img src="media/neo.gif" alt="Neo" width="240"><br><b>Neo</b><br><sub>Jacket</sub></td>
+    <td align="center"><img src="media/detective.gif" alt="Detective" width="240"><br><b>Detective</b><br><sub>Drone</sub></td>
+  </tr>
+</table>
 
-- Скины — это файлы `.skin` в папке игры `UserData\Skins`. Положи туда файл, и скин появится в списке.
-  Скины **Cowboy** для Kobold, **Dark Knight** для Sparrow, **Enforcer** для Roller, **Gear** для Reaper, **Code Breaker** для Seraph, **Ninja** для Grappler, **Hound** для Assassin, **Sunset** для Crossbolt, **Heavy Machinery** для Scarab, **Nerd** для Boulder, **Neo** для Jacket и **Detective** для Drone идут вместе с модом и появятся там сами.
-- Kobold, Sparrow, Roller, Reaper, Seraph, Grappler, Assassin, Crossbolt, Boulder, Jacket и другие классы, кроме Scarab и Drone, — для VR. На ПК их нет в меню,
-  но их скины ты увидишь на игроках в шлеме, у которых стоит мод.
-- Чтобы другой игрок увидел твой скин, у него должен стоять этот мод и лежать тот же файл скина.
-  Игроки без мода видят обычного персонажа — играть вместе это не мешает.
-- Сделать свой скин можно в Unity-проекте `Unity\` этого репозитория: положи модель в
-  `Assets\Skins\<Имя скина>\KOBOLD.fbx` и нажми **Tools → Skins → Build All**. Объекты в модели называй
-  как детали персонажа в игре (`Head`, `Body`, `Left Hand`, `LH Carbine`…), а менять в Blender можно
-  только саму форму, не положение объектов. Чтобы убрать деталь игры (например, `BodyHipSegment`),
-  впиши её имя в файл `hide.txt` рядом с моделью. Скин соберётся сразу для ПК и для Quest.
-- Меню на Quest написано шрифтом [Pixelify Sans](https://github.com/eifetx/Pixelify-Sans) (лицензия SIL OFL 1.1).
+## What it is
 
-</details>
+- The mod changes how your character looks.
+- Every class has its own skins. Pick one in the menu — the mod remembers it.
+- Players with the mod see your skin, and you see theirs. On PC and on Quest.
+- Your team color stays.
 
-## Управление
+## Skins
 
-| Клавиша | Что делает |
-|---|---|
-| F2 | Открыть или закрыть меню скинов (слева сверху) |
-| Клик / 1–4 | В меню: надеть скин (первая кнопка — обычный вид) |
-| ← → | В меню: другая страница скинов (если их больше четырёх) |
-| Ctrl+F11 | Записать устройство всех классов в `UserData\Skins\Dumps` (для тех, кто делает скины) |
+The mod comes with 12 skins. All the models are made by **Cinder**.
 
-## Установка
+| Skin | Class | | Skin | Class |
+|---|---|---|---|---|
+| Cowboy | Kobold | | Hound | Assassin |
+| Dark Knight | Sparrow | | Sunset | Crossbolt |
+| Enforcer | Roller | | Heavy Machinery | Scarab |
+| Gear | Reaper | | Nerd | Boulder |
+| Code Breaker | Seraph | | Neo | Jacket |
+| Ninja | Grappler | | Detective | Drone |
 
-1. Скачай [MelonLoader](https://github.com/LavaGang/MelonLoader/releases) 0.7.x. Запусти установщик, выбери `Dust.exe` и нажми **Install**.
-2. Запусти игру один раз и закрой. Это нужно, чтобы MelonLoader всё подготовил.
-3. Скачай `Skins.dll` в [Releases](../../releases/latest) и положи его в папку игры `Mods`.
-4. Запусти игру. В чёрном окне консоли появится **Skins v0.7.0** — значит, всё работает!
-
-> Красные строки про **OpenXR** в консоли — это нормально, не обращай на них внимания.
-
-### Meta Quest (без ПК)
-
-Мод работает и на шлеме Quest без компьютера. Компьютер нужен только один раз — чтобы поставить мод.
-
-**Что понадобится:** шлем Quest с установленной DUST, USB-кабель и компьютер с Windows.
-
-1. **Включи режим разработчика.** В телефоне открой приложение **Meta Horizon** → **Menu** → **Devices** → твой шлем →
-   **Headset settings** → **Developer mode** и включи его. Если приложение просит создать организацию разработчика —
-   создай её на [developers.meta.com](https://developers.meta.com/horizon/manage/organizations/create/), это бесплатно.
-2. **Подключи шлем к компьютеру** кабелем и надень шлем. Там появится окно «Allow USB debugging?» —
-   поставь галочку **Always allow from this computer** и нажми **Allow**.
-3. **Скачай QuestPatcher:** [QuestPatcher-windows-standalone.zip](https://github.com/Lauriethefish/QuestPatcher/releases/latest/download/QuestPatcher-windows-standalone.zip). Распакуй его и запусти `QuestPatcher.exe`.
-4. **Выбери DUST.** Сначала QuestPatcher настроен на Beat Saber. Открой вкладку **Tools & Options** → **Change App**
-   и выбери `org.VRDojo.Dust`.
-5. **Пропатчи игру.** Вкладка **Patching** → в настройках выбери загрузчик модов **Scotland2** → нажми **Patch my app!**
-   и подожди пару минут. Кабель в это время не отключай!
-6. **Скачай мод:** [Skins.qmod](https://github.com/LolegRus/Skins/releases/latest/download/Skins.qmod) — скачивание начнётся сразу.
-7. **Поставь мод:** перетащи файл `.qmod` прямо в окно QuestPatcher. Мод появится во вкладке **Mods** и сразу включится.
-8. **Готово!** Отключи кабель, надень шлем и запусти DUST.
-
-> Если DUST обновится из магазина, моды перестанут работать. Просто повтори шаг 5 — сами моды ставить заново не нужно.
-
-
-> На Quest меню открывается нажатием **левого стика**: над левой рукой появятся скины класса, за который ты играешь.
-> Наведи правый контроллер на скин и нажми курок. Скины Cowboy, Dark Knight, Enforcer, Gear, Code Breaker, Ninja, Hound, Sunset, Heavy Machinery, Nerd, Neo и Detective уже лежат в моде.
-
-## Сборка из исходников
-
-Нужно, только если хочешь поменять код. Понадобятся .NET SDK (6.0 или новее) и установленная DUST.
-Если игра лежит не в папке по умолчанию, укажи, где она:
-
-```
-dotnet build Skins/Skins.csproj -c Release -p:DustPath="D:\Games\Dust 0.8.4"
-```
-
-Готовая DLL сама скопируется в папку игры `Mods`.
-
----
-
-## English
-
-> Your own models for DUST characters — like a cowboy Kobold.
-
-## What it does
-
-- **New look** — swaps your character's model for a skin from a file
-- **A skin for every class** — the menu shows the skins of the class you play, each with its own button; the mod remembers your pick and puts it on by itself
-- **Game colors stay** — team color, the hit flash and the weapons work just like before
-- **Others see it** — players with this mod see your skin, and you see theirs, both on PC and on Quest
-
-<details>
-<summary>More details</summary>
-
-- Skins are `.skin` files in the game's `UserData\Skins` folder. Drop a file there and the skin shows up in the list.
-  The **Cowboy** skin for Kobold, the **Dark Knight** skin for Sparrow, the **Enforcer** skin for Roller, the **Gear** skin for Reaper, the **Code Breaker** skin for Seraph, the **Ninja** skin for Grappler, the **Hound** skin for Assassin, the **Sunset** skin for Crossbolt, the **Heavy Machinery** skin for Scarab, the **Nerd** skin for Boulder, the **Neo** skin for Jacket and the **Detective** skin for Drone come with the mod and show up there by themselves.
-- Kobold, Sparrow, Roller, Reaper, Seraph, Grappler, Assassin, Crossbolt, Boulder, Jacket and the other classes except Scarab and Drone are for VR. On PC they are not in the menu,
-  but you see their skins on headset players who have the mod.
-- For another player to see your skin, they need this mod and the same skin file.
-  Players without the mod see the normal character — you can still play together.
-- You can make your own skin in the `Unity\` project of this repository: put the model into
-  `Assets\Skins\<Skin name>\KOBOLD.fbx` and press **Tools → Skins → Build All**. Name the objects in the model
-  like the character's parts in the game (`Head`, `Body`, `Left Hand`, `LH Carbine`…), and in Blender change
-  only the shapes, not where the objects are. To remove a part of the game (like `BodyHipSegment`),
-  write its name into a `hide.txt` file next to the model. The skin is built for both PC and Quest at once.
-- The Quest menu uses the [Pixelify Sans](https://github.com/eifetx/Pixelify-Sans) font (SIL OFL 1.1 license).
-
-</details>
-
-## Controls
-
-| Key | What it does |
-|---|---|
-| F2 | Open or close the skin menu (top left) |
-| Click / 1–4 | In the menu: put on a skin (the first button is the normal look) |
-| ← → | In the menu: another page of skins (when there are more than four) |
-| Ctrl+F11 | Write how all classes are built into `UserData\Skins\Dumps` (for skin makers) |
+On PC you can only play Scarab and Drone. You see the other classes' skins on players in VR headsets.
 
 ## Installation
 
-1. Get [MelonLoader](https://github.com/LavaGang/MelonLoader/releases) 0.7.x. Run its installer, pick `Dust.exe` and press **Install**.
-2. Start the game once, then close it. MelonLoader needs this to set itself up.
-3. Download `Skins.dll` from [Releases](../../releases/latest) and put it into the game's `Mods` folder.
-4. Start the game. In the black console window you should see **Skins v0.7.0** — that means it works!
+### PC
 
-> Red lines about **OpenXR** in the console are normal. Just ignore them.
+1. Get [MelonLoader](https://github.com/LavaGang/MelonLoader/releases) 0.7.x. Run its installer, pick `Dust.exe` and press **Install**.
+2. Start the game once, then close it.
+3. Download [Skins.dll](https://github.com/LolegRus/Skins/releases/latest/download/Skins.dll) and put it into the game's `Mods` folder.
+4. Start the game. In the black window you should see **Skins v0.7.0** — that means it works!
+
+> Red lines about **OpenXR** in the black window are normal.
 
 ### Meta Quest (no PC)
 
-The mod also works on the Quest headset on its own. You only need a computer once — to install the mod.
+You only need a computer once — to install the mod. You also need a USB cable and DUST on the headset.
 
-**You need:** a Quest headset with DUST installed, a USB cable and a Windows computer.
-
-1. **Turn on developer mode.** On your phone open the **Meta Horizon** app → **Menu** → **Devices** → your headset →
-   **Headset settings** → **Developer mode** and switch it on. If the app asks you to create a developer organization,
+1. **Turn on developer mode.** On your phone: the **Meta Horizon** app → **Menu** → **Devices** → your headset →
+   **Headset settings** → **Developer mode**. If it asks you to create an organization,
    make one at [developers.meta.com](https://developers.meta.com/horizon/manage/organizations/create/) — it's free.
-2. **Plug the headset into the computer** and put it on. You'll see "Allow USB debugging?" —
-   tick **Always allow from this computer** and press **Allow**.
-3. **Download QuestPatcher:** [QuestPatcher-windows-standalone.zip](https://github.com/Lauriethefish/QuestPatcher/releases/latest/download/QuestPatcher-windows-standalone.zip). Unzip it and run `QuestPatcher.exe`.
-4. **Pick DUST.** At first QuestPatcher is set up for Beat Saber. Open the **Tools & Options** tab → **Change App**
-   and choose `org.VRDojo.Dust`.
-5. **Patch the game.** **Patching** tab → pick the mod loader **Scotland2** in the options → press **Patch my app!**
-   and wait a couple of minutes. Don't unplug the cable while it works!
-6. **Download the mod:** [Skins.qmod](https://github.com/LolegRus/Skins/releases/latest/download/Skins.qmod) — the download starts right away.
-7. **Install the mod:** drag the `.qmod` file right into the QuestPatcher window. It shows up in the **Mods** tab, already on.
-8. **Done!** Unplug the cable, put on the headset and start DUST.
+2. **Plug the headset** into the computer and put it on. In "Allow USB debugging?" tick
+   **Always allow from this computer** and press **Allow**.
+3. **Download [QuestPatcher](https://github.com/Lauriethefish/QuestPatcher/releases/latest/download/QuestPatcher-windows-standalone.zip)**, unzip it and run `QuestPatcher.exe`.
+4. **Pick DUST:** **Tools & Options** tab → **Change App** → `org.VRDojo.Dust`.
+5. **Patch the game:** **Patching** tab → mod loader **Scotland2** → **Patch my app!** Wait a couple of minutes, keep the cable in.
+6. **Download [Skins.qmod](https://github.com/LolegRus/Skins/releases/latest/download/Skins.qmod)** and drag it into the QuestPatcher window.
+7. **Done!** Unplug the cable and start DUST in the headset.
 
-> If DUST updates from the store, mods stop working. Just do step 5 again — you don't need to install the mods again.
+> If DUST updates, do step 5 again. You don't need to install the mod again.
 
+## Controls
 
-> On Quest, press the **left stick** to open the menu: the skins of the class you play show up above your left hand.
-> Point the right controller at a skin and pull the trigger. The Cowboy, Dark Knight, Enforcer, Gear, Code Breaker, Ninja, Hound, Sunset, Heavy Machinery, Nerd, Neo and Detective skins come with the mod.
+| | PC | Quest |
+|---|---|---|
+| Open the menu | F2 | Press the left stick |
+| Put on a skin | Click or 1–4 | Point the right controller and pull the trigger |
+| Another page | ← → | Arrows at the bottom of the menu |
 
-## Building from source
+The first button in the menu is the normal look without a skin.
 
-Only needed if you want to change the code. You need the .NET SDK (6.0 or newer) and DUST installed.
-If the game is not in the default folder, tell the build where it is:
+## Help
 
-```
-dotnet build Skins/Skins.csproj -c Release -p:DustPath="D:\Games\Dust 0.8.4"
-```
-
-The finished DLL is copied into the game's `Mods` folder by itself.
+Something doesn't work, or you have an idea? Write to us on [Discord](https://discord.gg/KM5YC5FjH).
 
 ---
 
-Made by **LolegRus**
+## Русский
+
+> Новые модели для персонажей DUST. Их видят и другие игроки с модом.
+
+### ⬇️ [Скачать для ПК](https://github.com/LolegRus/Skins/releases/latest/download/Skins.dll) · [Скачать для Quest](https://github.com/LolegRus/Skins/releases/latest/download/Skins.qmod) · 💬 [Discord](https://discord.gg/KM5YC5FjH)
+
+## Что это
+
+- Мод меняет вид твоего персонажа на скин.
+- У каждого класса свои скины. Выбираешь в меню — мод запомнит.
+- Игроки с модом видят твой скин, а ты их. И на ПК, и на Quest.
+- Цвет команды остаётся.
+
+## Скины
+
+В моде уже есть 12 скинов. Все модели сделал **Cinder**.
+
+| Скин | Класс | | Скин | Класс |
+|---|---|---|---|---|
+| Cowboy | Kobold | | Hound | Assassin |
+| Dark Knight | Sparrow | | Sunset | Crossbolt |
+| Enforcer | Roller | | Heavy Machinery | Scarab |
+| Gear | Reaper | | Nerd | Boulder |
+| Code Breaker | Seraph | | Neo | Jacket |
+| Ninja | Grappler | | Detective | Drone |
+
+На ПК можно играть только за Scarab и Drone. Скины других классов видно на игроках в VR-шлеме.
+
+## Установка
+
+### ПК
+
+1. Скачай [MelonLoader](https://github.com/LavaGang/MelonLoader/releases) 0.7.x. Запусти установщик, выбери `Dust.exe` и нажми **Install**.
+2. Запусти игру один раз и закрой.
+3. Скачай [Skins.dll](https://github.com/LolegRus/Skins/releases/latest/download/Skins.dll) и положи его в папку игры `Mods`.
+4. Запусти игру. В чёрном окне появится **Skins v0.7.0** — значит, всё работает!
+
+> Красные строки про **OpenXR** в чёрном окне — это нормально.
+
+### Meta Quest (без ПК)
+
+Компьютер нужен только один раз — чтобы поставить мод. Ещё понадобятся USB-кабель и DUST на шлеме.
+
+1. **Включи режим разработчика.** В телефоне: приложение **Meta Horizon** → **Menu** → **Devices** → твой шлем →
+   **Headset settings** → **Developer mode**. Если просит создать организацию —
+   создай её на [developers.meta.com](https://developers.meta.com/horizon/manage/organizations/create/), это бесплатно.
+2. **Подключи шлем** кабелем к компьютеру и надень его. В окне «Allow USB debugging?» поставь галочку
+   **Always allow from this computer** и нажми **Allow**.
+3. **Скачай [QuestPatcher](https://github.com/Lauriethefish/QuestPatcher/releases/latest/download/QuestPatcher-windows-standalone.zip)**, распакуй и запусти `QuestPatcher.exe`.
+4. **Выбери DUST:** вкладка **Tools & Options** → **Change App** → `org.VRDojo.Dust`.
+5. **Пропатчи игру:** вкладка **Patching** → загрузчик **Scotland2** → **Patch my app!** Подожди пару минут, кабель не отключай.
+6. **Скачай [Skins.qmod](https://github.com/LolegRus/Skins/releases/latest/download/Skins.qmod)** и перетащи его в окно QuestPatcher.
+7. **Готово!** Отключи кабель и запусти DUST в шлеме.
+
+> Если DUST обновится, повтори шаг 5. Мод заново ставить не нужно.
+
+## Управление
+
+| | ПК | Quest |
+|---|---|---|
+| Открыть меню | F2 | Нажми левый стик |
+| Надеть скин | Клик или 1–4 | Наведи правый контроллер и нажми курок |
+| Другая страница | ← → | Стрелки внизу меню |
+
+Первая кнопка в меню — обычный вид без скина.
+
+## Помощь
+
+Что-то не работает или есть идея? Пиши в [Discord](https://discord.gg/KM5YC5FjH).
+
+---
+
+Made by **LolegRus** · skin models by **Cinder**
