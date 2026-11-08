@@ -71,6 +71,10 @@
       "destination": "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/Observatory-49.skin"
     },
     {
+      "name": "Rollder.skin",
+      "destination": "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/Rollder.skin"
+    },
+    {
       "name": "MenuFont.font",
       "destination": "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/MenuFont.font"
     },
