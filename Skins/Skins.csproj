@@ -45,6 +45,10 @@
 		<Compile Include="SkinApplier.cs" />
 		<Compile Include="SkinMenu.cs" />
 		<Compile Include="SkinNet.cs" />
+		<Compile Include="Hub.cs" />
+		<Compile Include="Mirror.cs" />
+		<Compile Include="TerminalMenu.cs" />
+		<Compile Include="Hologram.cs" />
 	</ItemGroup>
 
 	<!-- Скины, которые идут с модом: Windows-бандлы из Unity-проекта (Tools → Skins → Build All кладёт их в Builtin\) -->
@@ -52,6 +56,7 @@
 		<EmbeddedResource Include="Builtin\*.skin" LogicalName="Skins.Builtin.%(Filename)%(Extension)" />
 		<!-- Пиксельный шрифт меню (Tools → Skins → Build Menu Font) и его лицензия OFL -->
 		<EmbeddedResource Include="MenuFont.font" LogicalName="Skins.MenuFont.font" />
+		<EmbeddedResource Include="Hub.bundle" LogicalName="Skins.Hub.bundle" />
 		<EmbeddedResource Include="..\Unity\Assets\Fonts\PixelifySans-OFL.txt" LogicalName="Skins.PixelifySans-OFL.txt" />
 	</ItemGroup>
 

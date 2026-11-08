@@ -77,9 +77,10 @@ public static class MenuFontBuilder
             BuildAssetBundleOptions.ChunkBasedCompression, BuildTarget.Android);
         if (manifest == null) { Debug.LogError("[Skins] Бандл шрифта не собрался"); return; }
 
-        // ПК: меню на IMGUI — ему нужен обычный Font (TTF с данными шрифта), бандл зашивается в DLL
+        // ПК: меню F2 на IMGUI — ему нужен обычный Font (TTF с данными шрифта); надписи на терминале в хабе —
+        // TextMeshPro, ему — тот же SDF-шрифт, что на Quest. Бандл зашивается в DLL
         Directory.CreateDirectory(PcOutDir);
-        var pc = new AssetBundleBuild { assetBundleName = BundleName, assetNames = new[] { Source } };
+        var pc = new AssetBundleBuild { assetBundleName = BundleName, assetNames = new[] { Source, Asset } };
         if (BuildPipeline.BuildAssetBundles(PcOutDir, new[] { pc }, BuildAssetBundleOptions.ChunkBasedCompression,
                 BuildTarget.StandaloneWindows64) == null)
             Debug.LogError("[Skins] Бандл шрифта для ПК не собрался");

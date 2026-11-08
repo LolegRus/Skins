@@ -11,6 +11,7 @@ namespace Skins
     public class Core : MelonMod
     {
         internal static MelonLogger.Instance Log;
+        internal static Core Instance;
 
         private const string Original = "";   // «без скина» в настройках
 
@@ -21,11 +22,14 @@ namespace Skins
         private IntPtr _seenClass;            // экземпляр класса, для которого уже решили, что надеть
 
         /// <summary>Ключ текущего класса локального игрока (null — без класса).</summary>
+        internal bool MenuOpen => _menu != null && _menu.Open;
+
         internal string CurrentKey => _class != null ? KeyOf(_class) : null;
 
         public override void OnInitializeMelon()
         {
             Log = LoggerInstance;
+            Instance = this;
             _prefs = MelonPreferences.CreateCategory("Skins");
             _menu = new SkinMenu(this);
             Log.Msg($"Initialized. F2 — skins menu, Ctrl+F11 — dump classes. Skins folder: {SkinLibrary.Folder}");
@@ -57,6 +61,9 @@ namespace Skins
 
             SkinNet.Update(_class, _applied?.Skin.Name);
 
+            try { Hub.Update(); }
+            catch (Exception e) { Log.Error("Хаб: " + e); }
+
             var kb = Keyboard.current;
             if (kb == null) return;
 
@@ -67,6 +74,8 @@ namespace Skins
             try { _menu.Update(kb); }
             catch (Exception e) { Log.Error("Меню скинов: " + e); }
         }
+
+        public override void OnLateUpdate() => Hub.LateUpdate();
 
         private string _guiError;   // последняя ошибка отрисовки меню — пишем её один раз, со стеком
 

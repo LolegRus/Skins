@@ -1,4 +1,5 @@
 using Il2CppInterop.Runtime;
+using Il2CppTMPro;
 using MelonLoader.Utils;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -206,6 +207,80 @@ namespace Skins
                 Core.Log.Warning($"Шрифт меню: {e.Message} — шрифт по умолчанию");
             }
             return _menuFont;
+        }
+
+        private static TMP_FontAsset _screenFont;
+        private static bool _screenFontFailed;
+
+        /// <summary>
+        /// Pixelify Sans для TextMeshPro (надписи на терминале в хабе) — из того же бандла, что шрифт меню.
+        /// Не загрузился — первый шрифт TextMeshPro игры.
+        /// </summary>
+        internal static TMP_FontAsset ScreenFont()
+        {
+            if (Game.IsAlive(_screenFont)) return _screenFont;
+            if (!_screenFontFailed)
+            {
+                try
+                {
+                    MenuFont();   // выкладывает и грузит бандл шрифта
+                    if (_fontBundle == null) throw new Exception("бандл шрифта не загрузился");
+                    _screenFont = LoadAsset<TMP_FontAsset>(_fontBundle, "PixelifySans SDF");
+                    if (_screenFont == null) throw new Exception("нет PixelifySans SDF в бандле");
+                    _screenFont.hideFlags |= HideFlags.DontUnloadUnusedAsset;
+                    Material m = _screenFont.material;
+                    if (m != null)
+                    {
+                        m.hideFlags |= HideFlags.DontUnloadUnusedAsset;
+                        if (m.shader == null || !m.shader.isSupported)
+                        {
+                            Shader game = Shader.Find("TextMeshPro/Distance Field") ?? Shader.Find("TextMeshPro/Mobile/Distance Field");
+                            Core.Log.Warning($"Шрифт терминала: шейдер из бандла не работает — беру шейдер игры '{(game != null ? game.name : "нет")}'.");
+                            if (game != null) m.shader = game;
+                        }
+                    }
+                    return _screenFont;
+                }
+                catch (Exception e)
+                {
+                    _screenFontFailed = true;
+                    Core.Log.Warning($"Шрифт терминала: {e.Message} — шрифт игры");
+                }
+            }
+            foreach (TMP_FontAsset f in Resources.FindObjectsOfTypeAll<TMP_FontAsset>())
+                if (f != null) return _screenFont = f;
+            return null;
+        }
+
+        // ---- терминал скинов в хабе ----
+        // Модель Cinder (Unity\: Tools → Skins → Build Hub Terminal): бандл зашит в DLL, выкладывается в папку скинов
+        private const string HubResource = "Skins.Hub.bundle";
+        private static Bundle _hubBundle;
+        private static GameObject _terminal;
+        private static bool _hubFailed;
+
+        /// <summary>Префаб терминала (null — не загрузился). Игра может выгрузить его при смене сцены — грузим заново.</summary>
+        internal static GameObject Terminal()
+        {
+            if (Game.IsAlive(_terminal)) return _terminal;
+            if (_hubFailed) return null;
+            try
+            {
+                Directory.CreateDirectory(Folder);
+                string path = Path.Combine(Folder, "Hub.bundle");
+                Extract(HubResource, path);
+                if (_hubBundle == null || _hubBundle.Asset == null || _hubBundle.Asset.WasCollected) _hubBundle = Load(path);
+                if (_hubBundle == null) throw new Exception("бандл не загрузился");
+                _terminal = LoadAsset<GameObject>(_hubBundle, "Terminal");
+                if (_terminal == null) throw new Exception("нет модели Terminal в бандле");
+                Protect(_terminal);
+            }
+            catch (Exception e)
+            {
+                _hubFailed = true;
+                Core.Log.Error("Терминал: " + e.Message);
+            }
+            return _terminal;
         }
 
         private static Bundle Load(string path)
