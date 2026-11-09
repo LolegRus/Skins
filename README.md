@@ -34,6 +34,7 @@
 - Every class has its own skins. Pick one in the menu — the mod remembers it.
 - Players with the mod see your skin, and you see theirs. On PC and on Quest.
 - Your team color stays.
+- In the hub there is a skin terminal: look through every skin of every class and see it spin on the hologram stand. Next to it is a mirror, and in the lava cave there is a little hangout with furniture.
 
 ## Skins
 
@@ -86,6 +87,7 @@ You only need a computer once — to install the mod. You also need a USB cable 
 | Open the menu | F2 | Press the left stick |
 | Put on a skin | Click or 1–4 | Point the right controller and pull the trigger |
 | Another page | ← → | Arrows at the bottom of the menu |
+| Hub terminal: press a button | Aim at the screen, left click | Point the right controller, pull the trigger |
 
 The first button in the menu is the normal look without a skin.
 
@@ -110,6 +112,7 @@ Something doesn't work, or you have an idea? Write to us on [Discord](https://di
 - У каждого класса свои скины. Выбираешь в меню — мод запомнит.
 - Игроки с модом видят твой скин, а ты их. И на ПК, и на Quest.
 - Цвет команды остаётся.
+- В хабе есть терминал скинов: смотри все скины всех классов, а выбранный крутится голограммой на подставке. Рядом — зеркало, а в пещере у лавы — уголок отдыха с мебелью.
 
 ## Скины
 
@@ -162,6 +165,7 @@ Something doesn't work, or you have an idea? Write to us on [Discord](https://di
 | Открыть меню | F2 | Нажми левый стик |
 | Надеть скин | Клик или 1–4 | Наведи правый контроллер и нажми курок |
 | Другая страница | ← → | Стрелки внизу меню |
+| Терминал в хабе: нажать кнопку | Прицел на экран, левый клик | Наведи правый контроллер и нажми курок |
 
 Первая кнопка в меню — обычный вид без скина.
 

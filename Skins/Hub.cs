@@ -39,6 +39,7 @@ namespace Skins
             bool inHub = SceneManager.GetActiveScene().name == Scene;
             Keep(ref _monitorObj, inHub, MonitorAt, false);
             if (Game.IsAlive(_monitorObj) && _monitorObj.activeSelf) Menu?.Update();
+            else Menu?.Release();   // вне хаба (или терминал пересоздаётся) — выстрел, выключенный у экрана, вернуть
             Keep(ref _mirrorObj, inHub && MirrorOn, MirrorAt, true);
             KeepFurniture(inHub);
         }
@@ -88,14 +89,12 @@ namespace Skins
             // CopySHCoefficientArraysFrom в прослойке Il2Cpp падает («garbage collected» на любом массиве) — задаём
             // сами векторы, из которых шейдер берёт свет зонда (как Unity: GetShaderConstantsFromNormalizedSH)
             SetProbe(probe, CaveLight());
-            int lit = 0;
             foreach (MeshRenderer r in _furniture.GetComponentsInChildren<MeshRenderer>(true))
             {
                 r.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.CustomProvided;
                 r.SetPropertyBlock(probe);
-                lit++;
             }
-            Core.Log.Msg($"Мебель: поставлена ({_furniture.transform.childCount} предметов, мешей {count}, со светом пола {lit}).");
+            Core.Log.Msg($"Мебель: поставлена ({_furniture.transform.childCount} предметов, мешей {count}).");
         }
 
         // Освещение пещеры как световой зонд: окружение + направленный свет от лавы (снизу-сбоку)
@@ -133,22 +132,6 @@ namespace Skins
             return sh;
         }
 
-        // ---- место для мебели (временно, Ctrl+F12) ----
-        // Встань там, куда ставить мебель, посмотри на это место и нажми Ctrl+F12: в лог — где ты и куда смотришь,
-        // а сам кусок хаба достаётся из файлов игры (level1) скриптом UnityPy — меши хаба в игре нечитаемые
-
-        internal static void Spot()
-        {
-            Camera cam = Camera.main;
-            if (cam == null) return;
-            Transform t = cam.transform;
-            bool hit = Physics.Raycast(t.position, t.forward, out RaycastHit h, 100f, ~0, QueryTriggerInteraction.Ignore);
-            Vector3 at = hit ? h.point : t.position;
-            string what = hit && h.collider != null ? h.collider.name : "—";
-            Core.Log.Msg($"Место: камера {t.position:F2}, взгляд {t.forward:F2}, точка {at:F2}, нормаль {(hit ? h.normal : Vector3.zero):F2}, " +
-                         $"объект '{what}', сцена '{SceneManager.GetActiveScene().name}'");
-        }
-
         /// <summary>После движения камеры: зеркало рисует отражение для её нового положения.</summary>
         internal static void LateUpdate()
         {
@@ -173,22 +156,6 @@ namespace Skins
             }
             if (!obj.activeSelf) obj.SetActive(true);
             if (mirror && _mirrorView != null) _mirrorView.Active = true;
-        }
-
-        private static void Destroy(bool mirror)
-        {
-            if (mirror)
-            {
-                _mirrorView?.Dispose();
-                _mirrorView = null;
-                if (Game.IsAlive(_mirrorObj)) Object.Destroy(_mirrorObj);
-                _mirrorObj = null;
-            }
-            else
-            {
-                if (Game.IsAlive(_monitorObj)) Object.Destroy(_monitorObj);
-                _monitorObj = null;
-            }
         }
 
         // Объект стоит лицом от стены: локальная -Z смотрит в комнату (так видна лицевая сторона Quad)
@@ -240,6 +207,7 @@ namespace Skins
                 r.sharedMaterials = mats;
                 Solid(r.gameObject, layer);   // до меню и голограммы: у них своя, слой 0, без коллизии
             }
+            Menu?.Release();   // у старого меню мог остаться выключенный выстрел
             Menu = new TerminalMenu(root.transform);
             Core.Log.Msg($"Хаб: терминал поставлен, пол на y = {origin.y:0.###}.");
             return root;

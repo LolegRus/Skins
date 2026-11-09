@@ -80,7 +80,7 @@ namespace Skins
                 Core.Log.Msg($"Зеркало: слои камеры игрока {eye.cullingMask:X8}, зеркала {mask:X8}.");
             }
 
-            // Своё тело игра прячет от своей камеры не только слоем (тень без меша, forceRenderingOff):
+            // Своё тело игра может прятать от своей камеры не только слоем, но и «тенью без меша»:
             // рисуем зеркало вручную и на время его кадра тело показываем. Не вышло — камера рисует сама, без тела
             if (_manual)
             {
@@ -104,8 +104,7 @@ namespace Skins
         {
             internal readonly Renderer R;
             internal readonly UnityEngine.Rendering.ShadowCastingMode Shadows;
-            internal readonly bool ForcedOff;
-            internal Hidden(Renderer r) { R = r; Shadows = r.shadowCastingMode; ForcedOff = r.forceRenderingOff; }
+            internal Hidden(Renderer r) { R = r; Shadows = r.shadowCastingMode; }
         }
 
         private readonly List<Renderer> _body = new();
@@ -115,14 +114,13 @@ namespace Skins
         {
             var shown = new List<Hidden>();
             ScanBody();
+            // Только «тень без меша» — так тело прячут от своей камеры. forceRenderingOff не трогаем: им игра и моды
+            // прячут части нарочно (Ballista — корпус Scarab), в зеркале они бы появились
             foreach (Renderer r in _body)
             {
-                if (!Game.IsAlive(r)) continue;
-                bool shadowOnly = r.shadowCastingMode == UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
-                if (!shadowOnly && !r.forceRenderingOff) continue;
+                if (!Game.IsAlive(r) || r.shadowCastingMode != UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly) continue;
                 shown.Add(new Hidden(r));
-                if (shadowOnly) r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
-                r.forceRenderingOff = false;
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
             }
             return shown;
         }
@@ -131,9 +129,7 @@ namespace Skins
         {
             foreach (var h in shown)
             {
-                if (!Game.IsAlive(h.R)) continue;
-                h.R.shadowCastingMode = h.Shadows;
-                h.R.forceRenderingOff = h.ForcedOff;
+                if (Game.IsAlive(h.R)) h.R.shadowCastingMode = h.Shadows;
             }
         }
 

@@ -70,8 +70,6 @@ namespace Skins
             bool ctrl = kb.leftCtrlKey.isPressed || kb.rightCtrlKey.isPressed;
             if (kb.f2Key.wasPressedThisFrame && !ctrl) _menu.Toggle();
             if (kb.f11Key.wasPressedThisFrame && ctrl) Diagnostics.DumpAll();
-            // ВРЕМЕННО: место для мебели в хабе — координаты и кусок хаба в .obj
-            if (kb.f12Key.wasPressedThisFrame && ctrl) Hub.Spot();
 
             try { _menu.Update(kb); }
             catch (Exception e) { Log.Error("Меню скинов: " + e); }

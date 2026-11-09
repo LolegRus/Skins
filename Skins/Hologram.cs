@@ -68,6 +68,8 @@ namespace Skins
         internal void Show(string classKey, string skinName)
         {
             Clear();
+            if (classKey != _class || skinName != _skinName) _retried = false;   // другой скин — первая пересборка снова сразу
+            _broken = false;
             _class = classKey;
             _skinName = skinName;
 
@@ -110,12 +112,28 @@ namespace Skins
             _pivot.localPosition = Top + Vector3.up * (BobHeight * Mathf.Sin(_time * BobSpeed));
             _fx.Update(_time);
 
+            if (_broken)
+            {
+                if (Time.unscaledTime < _nextRetry) return;
+                _broken = false;
+                Show(_class, _skinName);
+                return;
+            }
             if (_skin == null) return;
             bool ok;
             try { ok = _skin.Sync(); }
             catch (Exception e) { Core.Log.Error("Голограмма: " + e.Message); ok = false; }
-            if (!ok) Show(_class, _skinName);   // игра выгрузила меши скина — собираем заново
+            if (ok) return;
+            // Игра выгрузила меши скина — собираем заново, но не чаще раза в RetryDelay: если скин так и не
+            // надевается, иначе голограмма пересобиралась бы (и писала ошибку) каждый кадр
+            _broken = true;
+            _nextRetry = Time.unscaledTime + (_retried ? RetryDelay : 0f);
+            _retried = true;
         }
+
+        private const float RetryDelay = 3f;
+        private float _nextRetry;
+        private bool _broken, _retried;   // _retried — уже пересобирали после сбоя (следующий раз — с паузой)
 
         private void Clear()
         {

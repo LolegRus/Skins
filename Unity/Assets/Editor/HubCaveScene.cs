@@ -19,7 +19,7 @@ public static class HubCaveScene
     private const string MeshDir = "Assets/Hub/Reference/Cave";
     private const string ScenePath = "Assets/Hub/HubCave.unity";
     private const string ShaderPath = "Assets/Hub/Reference/VertexColor.shader";
-    // Точка, где игрок нажал Ctrl+F12 (лог «Место: … точка …») — туда смотрит камера сцены
+    // Точка в пещере, с которой начинали расстановку (была клавиша Ctrl+F12) — туда смотрит камера сцены
     private static readonly Vector3 Spot = new Vector3(-14.32f, -17.21f, -71.12f);
 
     [MenuItem("Tools/Skins/Hub Cave Scene")]

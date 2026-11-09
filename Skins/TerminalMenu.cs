@@ -219,8 +219,17 @@ namespace Skins
 
         // ---- данные ----
 
-        private List<string> SkinNames() =>
-            _class != null ? SkinLibrary.For(_class).Select(s => s.Name).ToList() : new List<string>();
+        // Имена скинов выбранного класса — один список на класс (Refresh, плитки и стрелки спрашивают его каждый кадр)
+        private List<string> _skinNames = new();
+        private string _skinNamesFor;
+
+        private List<string> SkinNames()
+        {
+            if (_class == _skinNamesFor) return _skinNames;
+            _skinNamesFor = _class;
+            _skinNames = _class != null ? SkinLibrary.For(_class).Select(s => s.Name).ToList() : new List<string>();
+            return _skinNames;
+        }
 
         private static string Item(List<string> list, int page, int index)
         {
@@ -286,6 +295,57 @@ namespace Skins
             Refresh();
         }
 
+        // Пока прицел на экране, действия игры на левой кнопке мыши (выстрел) выключены — клик по кнопке не стреляет.
+        // Ушёл с экрана (или меню убрали) — включаем обратно только то, что выключали сами
+        private readonly List<InputAction> _muted = new();
+        private float _nextMuteScan;
+
+        private void MuteFire(bool mute)
+        {
+            if (!mute)
+            {
+                foreach (var a in _muted)
+                    try { if (a != null && !a.enabled) a.Enable(); } catch { }
+                _muted.Clear();
+                return;
+            }
+            foreach (var a in _muted)   // игра могла включить их обратно
+                try { if (a != null && a.enabled) a.Disable(); } catch { }
+            if (_muted.Count > 0 && Time.unscaledTime < _nextMuteScan) return;
+            _nextMuteScan = Time.unscaledTime + 1f;
+            var assets = new List<InputActionAsset>();
+            try { if (InputSystem.actions != null) assets.Add(InputSystem.actions); } catch { }
+            try
+            {
+                foreach (var asset in Resources.FindObjectsOfTypeAll<InputActionAsset>())
+                    if (asset != null && !assets.Contains(asset)) assets.Add(asset);
+            }
+            catch { }
+            foreach (var asset in assets)
+            {
+                var maps = asset.actionMaps;
+                for (int m = 0; m < maps.Count; m++)
+                {
+                    var actions = maps[m].actions;
+                    for (int i = 0; i < actions.Count; i++)
+                    {
+                        var a = actions[i];
+                        if (a == null || !a.enabled || _muted.Contains(a)) continue;
+                        bool onLeft = false;
+                        var binds = a.bindings;
+                        for (int k = 0; k < binds.Count && !onLeft; k++)
+                            onLeft = (binds[k].effectivePath ?? "").Contains("leftButton");
+                        if (!onLeft) continue;
+                        a.Disable();
+                        _muted.Add(a);
+                    }
+                }
+            }
+        }
+
+        /// <summary>Меню убрали (вышли из хаба) — вернуть выстрел.</summary>
+        internal void Release() => MuteFire(false);
+
         private bool Clicked()
         {
             if (Core.Instance != null && Core.Instance.MenuOpen) return false;   // открыто F2 — мышь у него
@@ -315,6 +375,9 @@ namespace Skins
             }
             _onScreen = on;
             _point = p;
+            if (on || _muted.Count > 0)
+                try { MuteFire(on && !(Core.Instance != null && Core.Instance.MenuOpen)); }
+                catch (Exception e) { Core.Log.Warning("Терминал: выстрел — " + e.Message); }
             _cursor.gameObject.SetActive(on);
             if (!on) return;
             _cursor.localPosition = Place(p, LCursor);
