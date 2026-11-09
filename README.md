@@ -1,6 +1,6 @@
 # Skins
 
-![DUST](https://img.shields.io/badge/DUST-0.8.4-1f6feb) ![MelonLoader](https://img.shields.io/badge/MelonLoader-0.7.x-8957e5) ![Version](https://img.shields.io/badge/version-0.9.0-2ea043)
+![DUST](https://img.shields.io/badge/DUST-0.8.4-1f6feb) ![MelonLoader](https://img.shields.io/badge/MelonLoader-0.7.x-8957e5) ![Version](https://img.shields.io/badge/version-1.0.0-2ea043)
 
 **🇷🇺 Русская версия ниже — [перейти](#русский)**
 
@@ -34,10 +34,11 @@
 - Every class has its own skins. Pick one in the menu — the mod remembers it.
 - Players with the mod see your skin, and you see theirs. On PC and on Quest.
 - Your team color stays.
+- In the hub there is a skin terminal: look through every skin of every class and see it spin on the hologram stand. Next to it is a mirror, and in the lava cave there is a little hangout with furniture.
 
 ## Skins
 
-The mod comes with 13 skins. All the models are made by **Cinder**.
+The mod comes with 14 skins. All the models are made by **Cinder**.
 
 | Skin | Class | | Skin | Class |
 |---|---|---|---|---|
@@ -47,7 +48,7 @@ The mod comes with 13 skins. All the models are made by **Cinder**.
 | Gear | Reaper | | Nerd | Boulder |
 | Code Breaker | Seraph | | Neo | Jacket |
 | Ninja | Grappler | | Detective | Drone |
-| Observatory-49 | Golem | | | |
+| Observatory-49 | Golem | | Rollder | Roller |
 
 On PC you can only play Scarab and Drone. You see the other classes' skins on players in VR headsets.
 
@@ -58,7 +59,7 @@ On PC you can only play Scarab and Drone. You see the other classes' skins on pl
 1. Get [MelonLoader](https://github.com/LavaGang/MelonLoader/releases) 0.7.x. Run its installer, pick `Dust.exe` and press **Install**.
 2. Start the game once, then close it.
 3. Download [Skins.dll](https://github.com/LolegRus/Skins/releases/latest/download/Skins.dll) and put it into the game's `Mods` folder.
-4. Start the game. In the black window you should see **Skins v0.9.0** — that means it works!
+4. Start the game. In the black window you should see **Skins v1.0.0** — that means it works!
 
 > Red lines about **OpenXR** in the black window are normal.
 
@@ -86,6 +87,7 @@ You only need a computer once — to install the mod. You also need a USB cable 
 | Open the menu | F2 | Press the left stick |
 | Put on a skin | Click or 1–4 | Point the right controller and pull the trigger |
 | Another page | ← → | Arrows at the bottom of the menu |
+| Hub terminal: press a button | Aim at the screen, left click | Point the right controller, pull the trigger |
 
 The first button in the menu is the normal look without a skin.
 
@@ -110,10 +112,11 @@ Something doesn't work, or you have an idea? Write to us on [Discord](https://di
 - У каждого класса свои скины. Выбираешь в меню — мод запомнит.
 - Игроки с модом видят твой скин, а ты их. И на ПК, и на Quest.
 - Цвет команды остаётся.
+- В хабе есть терминал скинов: смотри все скины всех классов, а выбранный крутится голограммой на подставке. Рядом — зеркало, а в пещере у лавы — уголок отдыха с мебелью.
 
 ## Скины
 
-В моде уже есть 13 скинов. Все модели сделал **Cinder**.
+В моде уже есть 14 скинов. Все модели сделал **Cinder**.
 
 | Скин | Класс | | Скин | Класс |
 |---|---|---|---|---|
@@ -123,7 +126,7 @@ Something doesn't work, or you have an idea? Write to us on [Discord](https://di
 | Gear | Reaper | | Nerd | Boulder |
 | Code Breaker | Seraph | | Neo | Jacket |
 | Ninja | Grappler | | Detective | Drone |
-| Observatory-49 | Golem | | | |
+| Observatory-49 | Golem | | Rollder | Roller |
 
 На ПК можно играть только за Scarab и Drone. Скины других классов видно на игроках в VR-шлеме.
 
@@ -134,7 +137,7 @@ Something doesn't work, or you have an idea? Write to us on [Discord](https://di
 1. Скачай [MelonLoader](https://github.com/LavaGang/MelonLoader/releases) 0.7.x. Запусти установщик, выбери `Dust.exe` и нажми **Install**.
 2. Запусти игру один раз и закрой.
 3. Скачай [Skins.dll](https://github.com/LolegRus/Skins/releases/latest/download/Skins.dll) и положи его в папку игры `Mods`.
-4. Запусти игру. В чёрном окне появится **Skins v0.9.0** — значит, всё работает!
+4. Запусти игру. В чёрном окне появится **Skins v1.0.0** — значит, всё работает!
 
 > Красные строки про **OpenXR** в чёрном окне — это нормально.
 
@@ -162,6 +165,7 @@ Something doesn't work, or you have an idea? Write to us on [Discord](https://di
 | Открыть меню | F2 | Нажми левый стик |
 | Надеть скин | Клик или 1–4 | Наведи правый контроллер и нажми курок |
 | Другая страница | ← → | Стрелки внизу меню |
+| Терминал в хабе: нажать кнопку | Прицел на экран, левый клик | Наведи правый контроллер и нажми курок |
 
 Первая кнопка в меню — обычный вид без скина.
 
