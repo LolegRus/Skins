@@ -5,7 +5,7 @@
   "id": "skins",
   "modloader": "Scotland2",
   "author": "LolegRus",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "packageId": "org.VRDojo.Dust",
   "packageVersion": "0.8.4",
   "description": "Your own models for DUST characters, like a cowboy Kobold. Menu: left stick. Players with the mod see your skin.",
@@ -73,6 +73,10 @@
     {
       "name": "Rollder.skin",
       "destination": "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/Rollder.skin"
+    },
+    {
+      "name": "Hub.bundle",
+      "destination": "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/Hub.bundle"
     },
     {
       "name": "MenuFont.font",

@@ -1377,6 +1377,7 @@ Held gRayRoot;
 Il2CppObject* gRaySegments[kRaySegments];
 Il2CppObject* gRayTransforms[kRaySegments];
 bool gRayShown;
+bool gHubRay;  // луч сейчас рисует экран терминала в хабе (hub.inc) — меню на руке его не прячет
 
 // Видимая правая рука класса — откуда идёт луч. У «физических» классов (Golem, Boulder, Roller…) рука
 // стоит далеко от контроллера, и луч от контроллера шёл «не оттуда». Узел руки — с PoseInterpolator
@@ -2044,7 +2045,7 @@ void TickMenu() {
     gHovered = -1;
     gHoverNav = 0;
     gOnPanel = false;
-    DrawRay({}, {0, 0, 1}, 0, camPos, scale);
+    if (!gHubRay) DrawRay({}, {0, 0, 1}, 0, camPos, scale);
     return;
   }
 
@@ -2135,6 +2136,8 @@ void TickMenu() {
   UpdateTexts();
 }
 
+#include "hub.inc"
+
 // ---------- кадр ----------
 
 void Tick() {
@@ -2159,6 +2162,7 @@ void Tick() {
   }
 
   TickMenu();
+  TickHub();
 
   if (Alive(gLocal.cls.obj) && !Sync(gLocal)) {
     std::string skin = gLocal.skin;
@@ -2484,6 +2488,10 @@ bool Init() {
     gMenuFailed = true;
     LOG(ANDROID_LOG_ERROR, "не найдено что-то для меню — меню не будет (скин выбирается в skins.cfg)");
   }
+  if (!InitHub(core)) {
+    gHubFailed = true;
+    LOG(ANDROID_LOG_ERROR, "не найдено что-то для хаба — уголка скинов не будет");
+  }
   if (!InitNetwork()) {
     gNetFailed = true;
     LOG(ANDROID_LOG_ERROR, "не найдено что-то для сети — скины других игроков видно не будет");
@@ -2511,7 +2519,7 @@ bool Init() {
 
 extern "C" __attribute__((visibility("default"))) void setup(CModInfo* info) {
   info->id = "skins";
-  info->version = "0.9.0";
+  info->version = "1.0.0";
   info->version_long = 0;
 }
 
