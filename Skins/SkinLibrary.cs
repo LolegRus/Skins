@@ -283,6 +283,21 @@ namespace Skins
             return _terminal;
         }
 
+        private static readonly Dictionary<string, GameObject> _hubAssets = new();
+
+        /// <summary>Другой префаб из Hub.bundle (мебель — «Furniture»); null — нет.</summary>
+        internal static GameObject HubPrefab(string name)
+        {
+            if (_hubAssets.TryGetValue(name, out var cached) && Game.IsAlive(cached)) return cached;
+            if (Terminal() == null) return null;   // грузит бандл
+            if (_hubBundle.Asset == null || _hubBundle.Asset.WasCollected) _hubBundle = Load(_hubBundle.Path);
+            var prefab = _hubBundle != null ? LoadAsset<GameObject>(_hubBundle, name) : null;
+            if (prefab == null) { Core.Log.Error($"Хаб: нет '{name}' в Hub.bundle"); return null; }
+            Protect(prefab);
+            _hubAssets[name] = prefab;
+            return prefab;
+        }
+
         private static Bundle Load(string path)
         {
             path = Path.GetFullPath(path);

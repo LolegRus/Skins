@@ -1,6 +1,6 @@
 # Skins
 
-![DUST](https://img.shields.io/badge/DUST-0.8.4-1f6feb) ![MelonLoader](https://img.shields.io/badge/MelonLoader-0.7.x-8957e5) ![Version](https://img.shields.io/badge/version-0.9.0-2ea043)
+![DUST](https://img.shields.io/badge/DUST-0.8.4-1f6feb) ![MelonLoader](https://img.shields.io/badge/MelonLoader-0.7.x-8957e5) ![Version](https://img.shields.io/badge/version-1.0.0-2ea043)
 
 **🇷🇺 Русская версия ниже — [перейти](#русский)**
 
@@ -58,7 +58,7 @@ On PC you can only play Scarab and Drone. You see the other classes' skins on pl
 1. Get [MelonLoader](https://github.com/LavaGang/MelonLoader/releases) 0.7.x. Run its installer, pick `Dust.exe` and press **Install**.
 2. Start the game once, then close it.
 3. Download [Skins.dll](https://github.com/LolegRus/Skins/releases/latest/download/Skins.dll) and put it into the game's `Mods` folder.
-4. Start the game. In the black window you should see **Skins v0.9.0** — that means it works!
+4. Start the game. In the black window you should see **Skins v1.0.0** — that means it works!
 
 > Red lines about **OpenXR** in the black window are normal.
 
@@ -134,7 +134,7 @@ Something doesn't work, or you have an idea? Write to us on [Discord](https://di
 1. Скачай [MelonLoader](https://github.com/LavaGang/MelonLoader/releases) 0.7.x. Запусти установщик, выбери `Dust.exe` и нажми **Install**.
 2. Запусти игру один раз и закрой.
 3. Скачай [Skins.dll](https://github.com/LolegRus/Skins/releases/latest/download/Skins.dll) и положи его в папку игры `Mods`.
-4. Запусти игру. В чёрном окне появится **Skins v0.9.0** — значит, всё работает!
+4. Запусти игру. В чёрном окне появится **Skins v1.0.0** — значит, всё работает!
 
 > Красные строки про **OpenXR** в чёрном окне — это нормально.
 

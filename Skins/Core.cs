@@ -3,7 +3,7 @@ using MelonLoader;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-[assembly: MelonInfo(typeof(Skins.Core), "Skins", "0.9.0", "LolegRus", null)]
+[assembly: MelonInfo(typeof(Skins.Core), "Skins", "1.0.0", "LolegRus", null)]
 [assembly: MelonGame("VRDojo", "Dust")]
 
 namespace Skins
@@ -70,6 +70,8 @@ namespace Skins
             bool ctrl = kb.leftCtrlKey.isPressed || kb.rightCtrlKey.isPressed;
             if (kb.f2Key.wasPressedThisFrame && !ctrl) _menu.Toggle();
             if (kb.f11Key.wasPressedThisFrame && ctrl) Diagnostics.DumpAll();
+            // ВРЕМЕННО: место для мебели в хабе — координаты и кусок хаба в .obj
+            if (kb.f12Key.wasPressedThisFrame && ctrl) Hub.Spot();
 
             try { _menu.Update(kb); }
             catch (Exception e) { Log.Error("Меню скинов: " + e); }

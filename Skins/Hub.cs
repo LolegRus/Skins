@@ -40,6 +40,113 @@ namespace Skins
             Keep(ref _monitorObj, inHub, MonitorAt, false);
             if (Game.IsAlive(_monitorObj) && _monitorObj.activeSelf) Menu?.Update();
             Keep(ref _mirrorObj, inHub && MirrorOn, MirrorAt, true);
+            KeepFurniture(inHub);
+        }
+
+        // ---- мебель в пещере у лавы ----
+        // Префаб «Furniture» из Hub.bundle (расставлена в Unity, сцена Assets/Hub/HubCave.unity) — уже в мировых
+        // координатах хаба: ставим в (0, 0, 0). Материал — тела игры (цвета вершин), коллизия — по мешам
+        private static GameObject _furniture;
+        private static bool _furnitureFailed;
+
+        private static void KeepFurniture(bool inHub)
+        {
+            if (!inHub)
+            {
+                if (Game.IsAlive(_furniture) && _furniture.activeSelf) _furniture.SetActive(false);
+                return;
+            }
+            if (Game.IsAlive(_furniture))
+            {
+                if (!_furniture.activeSelf) _furniture.SetActive(true);
+                return;
+            }
+            if (_furnitureFailed) return;
+            GameObject prefab = SkinLibrary.HubPrefab("Furniture");
+            if (prefab == null) { _furnitureFailed = true; return; }
+            _furniture = Object.Instantiate(prefab);
+            _furniture.name = "Skins Furniture";
+            _furniture.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+            Material mat = GameMaterial();
+            int count = 0;
+            foreach (MeshRenderer r in _furniture.GetComponentsInChildren<MeshRenderer>(true))
+            {
+                var mats = new Material[r.sharedMaterials.Length];
+                for (int i = 0; i < mats.Length; i++) mats[i] = mat;
+                r.sharedMaterials = mats;
+                r.receiveShadows = false;   // в пещере её затенял бы потолок — мебель была чёрной
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                try { Solid(r.gameObject, 0); }
+                catch (Exception e) { Core.Log.Warning($"Мебель: без коллизии '{r.name}' — {e.Message}"); }
+                count++;
+            }
+            // Свет хаба запечён (лайтмапы), а материал тела берёт только живой свет и световые зонды — в пещере
+            // мебель была чёрной. Материал пола с лайтмапой освещал, но двигал вершины (мебель «плющило», как лаву),
+            // «полное свечение» тела заливало цветом команды. Поэтому материал — тела, а освещение задаём сами:
+            // свои сферические гармоники (как у светового зонда) — тёплый полумрак и свет со стороны лавы
+            var probe = new MaterialPropertyBlock();
+            // CopySHCoefficientArraysFrom в прослойке Il2Cpp падает («garbage collected» на любом массиве) — задаём
+            // сами векторы, из которых шейдер берёт свет зонда (как Unity: GetShaderConstantsFromNormalizedSH)
+            SetProbe(probe, CaveLight());
+            int lit = 0;
+            foreach (MeshRenderer r in _furniture.GetComponentsInChildren<MeshRenderer>(true))
+            {
+                r.lightProbeUsage = UnityEngine.Rendering.LightProbeUsage.CustomProvided;
+                r.SetPropertyBlock(probe);
+                lit++;
+            }
+            Core.Log.Msg($"Мебель: поставлена ({_furniture.transform.childCount} предметов, мешей {count}, со светом пола {lit}).");
+        }
+
+        // Освещение пещеры как световой зонд: окружение + направленный свет от лавы (снизу-сбоку)
+        internal static Color CaveAmbient = new Color(0.3f, 0.19f, 0.13f);
+        internal static Color LavaLight = new Color(0.75f, 0.32f, 0.1f);
+        internal static Vector3 FromLava = new Vector3(-0.4f, -0.8f, 0.3f);   // направление света (от лавы к мебели)
+
+        private static bool _probeLogged;
+
+        private static void SetProbe(MaterialPropertyBlock b, UnityEngine.Rendering.SphericalHarmonicsL2 sh)
+        {
+            string[] a = { "unity_SHAr", "unity_SHAg", "unity_SHAb" }, bb = { "unity_SHBr", "unity_SHBg", "unity_SHBb" };
+            for (int c = 0; c < 3; c++)
+            {
+                b.SetVector(a[c], new Vector4(sh[c, 3], sh[c, 1], sh[c, 2], sh[c, 0] - sh[c, 6]));
+                b.SetVector(bb[c], new Vector4(sh[c, 4], sh[c, 5], sh[c, 6] * 3f, sh[c, 7]));
+            }
+            b.SetVector("unity_SHC", new Vector4(sh[0, 8], sh[1, 8], sh[2, 8], 1f));
+            if (!_probeLogged)
+            {
+                _probeLogged = true;
+                var sb = new System.Text.StringBuilder("Мебель: свет зонда (для Quest):");
+                for (int c = 0; c < 3; c++)
+                    sb.Append(FormattableString.Invariant($" A{c}=({sh[c, 3]:F5},{sh[c, 1]:F5},{sh[c, 2]:F5},{sh[c, 0] - sh[c, 6]:F5}) B{c}=({sh[c, 4]:F5},{sh[c, 5]:F5},{sh[c, 6] * 3f:F5},{sh[c, 7]:F5})"));
+                sb.Append(FormattableString.Invariant($" C=({sh[0, 8]:F5},{sh[1, 8]:F5},{sh[2, 8]:F5},1)"));
+                Core.Log.Msg(sb.ToString());
+            }
+        }
+
+        private static UnityEngine.Rendering.SphericalHarmonicsL2 CaveLight()
+        {
+            var sh = new UnityEngine.Rendering.SphericalHarmonicsL2();
+            sh.AddAmbientLight(CaveAmbient);
+            sh.AddDirectionalLight(-FromLava.normalized, LavaLight, 1f);
+            return sh;
+        }
+
+        // ---- место для мебели (временно, Ctrl+F12) ----
+        // Встань там, куда ставить мебель, посмотри на это место и нажми Ctrl+F12: в лог — где ты и куда смотришь,
+        // а сам кусок хаба достаётся из файлов игры (level1) скриптом UnityPy — меши хаба в игре нечитаемые
+
+        internal static void Spot()
+        {
+            Camera cam = Camera.main;
+            if (cam == null) return;
+            Transform t = cam.transform;
+            bool hit = Physics.Raycast(t.position, t.forward, out RaycastHit h, 100f, ~0, QueryTriggerInteraction.Ignore);
+            Vector3 at = hit ? h.point : t.position;
+            string what = hit && h.collider != null ? h.collider.name : "—";
+            Core.Log.Msg($"Место: камера {t.position:F2}, взгляд {t.forward:F2}, точка {at:F2}, нормаль {(hit ? h.normal : Vector3.zero):F2}, " +
+                         $"объект '{what}', сцена '{SceneManager.GetActiveScene().name}'");
         }
 
         /// <summary>После движения камеры: зеркало рисует отражение для её нового положения.</summary>
