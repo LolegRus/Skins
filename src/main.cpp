@@ -83,6 +83,7 @@ Il2CppObject* (*il2cpp_gchandle_get_target)(void*);
 uint32_t (*il2cpp_array_length)(Il2CppArray*);
 void* (*il2cpp_resolve_icall)(char const*);
 
+constexpr char kModVersion[] = "1.0.0";  // как "version" в mod.json; её же показывает терминал в хабе
 constexpr char kSkinDir[] = "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/";
 constexpr char kExtension[] = ".skin";
 constexpr char kConfig[] = "skins.cfg";
@@ -137,6 +138,20 @@ T* Keep(T* obj) {
   if (obj) il2cpp_gchandle_new(reinterpret_cast<Il2CppObject*>(obj), false);
   return obj;
 }
+
+// Куда NewGameObject / NewText кладут handle новых объектов: nullptr — навсегда (Keep), иначе — в список,
+// который освободят вместе с этими объектами (детали терминала и голограммы в хабе строятся заново при каждом заходе)
+std::vector<Held>* gKeepInto;
+Il2CppObject* KeepNew(Il2CppObject* obj) {
+  if (!gKeepInto) return Keep(obj);
+  if (obj) gKeepInto->push_back(Hold(obj));
+  return obj;
+}
+struct KeepInto {  // на время блока новые объекты держит pool
+  std::vector<Held>* was;
+  explicit KeepInto(std::vector<Held>& pool) : was(gKeepInto) { gKeepInto = &pool; }
+  ~KeepInto() { gKeepInto = was; }
+};
 
 Il2CppObject* TypeOf(Il2CppClass* klass) { return Keep(il2cpp_type_get_object(il2cpp_class_get_type(klass))); }
 
@@ -1440,7 +1455,7 @@ void Buzz(int node, float amplitude, float duration) {
 }
 
 Il2CppObject* NewGameObject(char const* name, Il2CppObject* parent) {
-  auto go = Keep(il2cpp_object_new(gGameObjectClass));
+  auto go = KeepNew(il2cpp_object_new(gGameObjectClass));
   Invoke(gGameObjectCtor, go, il2cpp_string_new(name));
   if (parent) {
     bool keepWorld = false;
@@ -1549,7 +1564,7 @@ Il2CppObject* NewText(Il2CppObject* font, Vec3 const& pos, int32_t order, int al
   float size = kFontSize;
   if (align != kAlignCenter && !gSetSizeDelta) align = kAlignCenter;
   auto go = NewGameObject("SkinsText", parent ? parent : gMenuTransform);
-  auto text = Keep(Invoke(gAddComponent, go, gTextMeshProType));
+  auto text = KeepNew(Invoke(gAddComponent, go, gTextMeshProType));
   if (!text) return nullptr;
   auto t = Call<Il2CppObject*>(gGameObjectTransform, go);
   Invoke(gSetFont, text, font);
@@ -2519,7 +2534,7 @@ bool Init() {
 
 extern "C" __attribute__((visibility("default"))) void setup(CModInfo* info) {
   info->id = "skins";
-  info->version = "1.0.0";
+  info->version = kModVersion;
   info->version_long = 0;
 }
 

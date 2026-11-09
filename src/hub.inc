@@ -19,7 +19,6 @@ constexpr Vec3 kMirrorAt{-7.961f, -6.624f, 32.075f};    // точка на ст�
 constexpr float kHubFloorY = -8.213f;                   // пол у стены (на ПК — лучом вниз)
 constexpr float kTerminalBack = 0.986f, kTerminalScale = 1.3f;
 constexpr float kMirrorW = 2.4f, kMirrorH = 2.6f, kMirrorFromFloor = 0.15f, kFromWall = 0.03f;
-constexpr char kModVersion[] = "1.0.0";
 
 Il2CppObject* (*il2cpp_object_get_class_fn)(Il2CppObject*);
 
@@ -65,6 +64,15 @@ Il2CppObject* gRectTransformType;
 Il2CppObject* gMaterialType;
 size_t gAnimatedTransformsOffset;   // ScalarProceduralAnimation.animatedTransforms
 bool gHubFailed;
+
+// Детали терминала (меню, голограмма, эффекты) живут, пока стоит терминал: их GC handle — в одном списке,
+// освобождаются вместе (FreeTerminalParts), иначе каждый заход в хаб оставлял бы сотню вечных handle
+std::vector<Held> gTerminalHeld;
+Il2CppObject* HoldPart(Il2CppObject* obj) {
+  if (obj) gTerminalHeld.push_back(Hold(obj));
+  return obj;
+}
+Held PartHeld(Il2CppObject* obj) { return {HoldPart(obj), nullptr}; }  // handle — в gTerminalHeld, не в самом Held
 
 struct Mat4 {
   float m[16];  // по столбцам, как Matrix4x4 у Unity: m[столбец * 4 + строка]
@@ -243,7 +251,7 @@ Il2CppObject* gHubFont;
 bool NewMark(Mark& m, Il2CppObject* parent, int32_t order) {
   m.text = NewText(gHubFont, {0, 0, 0}, order, kAlignCenter, 0, parent);
   if (!m.text) return false;
-  m.t = Keep(TransformOfComponent(m.text));
+  m.t = HoldPart(TransformOfComponent(m.text));
   m.shown.clear();
   return true;
 }
@@ -288,7 +296,7 @@ struct Label {
 bool NewLabel(Label& l, Il2CppObject* parent, int32_t order) {
   l.text = NewText(gHubFont, {0, 0, 0}, order, kAlignCenter, 0, parent);
   if (!l.text) return false;
-  l.t = Keep(TransformOfComponent(l.text));
+  l.t = HoldPart(TransformOfComponent(l.text));
   return true;
 }
 
@@ -341,8 +349,8 @@ struct Pixels {
 bool BuildPixels(Pixels& px, char const* name, Il2CppObject* parent, std::vector<std::string> const& rows, float size,
                  int32_t order, bool centered, char const* line, char const* fill) {
   auto go = NewGameObject(name, parent);
-  px.root = Hold(go);
-  px.t = Keep(TransformOf(go));
+  px.root = PartHeld(go);
+  px.t = HoldPart(TransformOf(go));
   size_t width = 0;
   for (auto const& r : rows) width = std::max(width, r.size());
   float ox = centered ? -size * width / 2 : 0, oy = centered ? size * rows.size() / 2 : 0;
@@ -443,6 +451,7 @@ struct Screen {
   std::vector<ScrButton> buttons;
   Pixels cursor, ripple;
   bool built = false;
+  bool failed = false;  // не собралось — недостроенное удалено, до нового терминала не пробуем
   int hover = -1;
   bool onScreen = false;
   Vec3 point{};
@@ -450,15 +459,24 @@ struct Screen {
 } gScr;
 
 std::vector<std::string> gScrClasses;  // ключи классов со скинами
+bool gScrClassesScanned;
 std::string gScrClass, gScrSkin;
 int gScrClassPage, gScrSkinPage;
 bool gHubTriggerWas;  // gHubRay — в main.cpp (его смотрит меню на руке)
 
-std::vector<std::string> ScrSkinNames() {
-  std::vector<std::string> out;
-  if (!gScrClass.empty())
-    for (auto s : SkinsFor(gScrClass)) out.push_back(s->name);
-  return out;
+// Имена скинов выбранного класса — список собирается раз за кадр (или при смене класса), не на каждую кнопку
+std::vector<std::string> const& ScrSkinNames() {
+  static std::vector<std::string> names;
+  static std::string forClass;
+  static int frame = -1;
+  if (frame != gLastFrame || forClass != gScrClass) {
+    frame = gLastFrame;
+    forClass = gScrClass;
+    names.clear();
+    if (!gScrClass.empty())
+      for (auto s : SkinsFor(gScrClass)) names.push_back(s->name);
+  }
+  return names;
 }
 int ScrPages(size_t n) { return std::max(1, int((n + kScrPage - 1) / kScrPage)); }
 std::string ScrItem(std::vector<std::string> const& list, int page, int i) {
@@ -474,7 +492,8 @@ void ScrPickClass(int i) {
 }
 
 void ScanScrClasses() {
-  if (!gScrClasses.empty()) return;
+  if (gScrClassesScanned) return;  // скины уже загружены (gSkinsLoaded) — список не меняется
+  gScrClassesScanned = true;
   for (auto key : kClassKeys)
     if (std::string(key) != "STYX" && !SkinsFor(key).empty()) gScrClasses.push_back(key);
   std::sort(gScrClasses.begin(), gScrClasses.end(), [](auto& a, auto& b) { return Title(a) < Title(b); });
@@ -491,8 +510,8 @@ Vec3 ScrPlace(float x, float y, int layer) { return {x, y, -kLayer * layer}; }
 
 bool BuildScreen(Il2CppObject* terminal) {
   auto go = NewGameObject("Skins Terminal Menu", terminal);
-  gScr.root = Hold(go);
-  gScr.ui = Keep(TransformOf(go));
+  gScr.root = PartHeld(go);
+  gScr.ui = HoldPart(TransformOf(go));
   SetLocal(gScr.ui, {0, kScrCenterY, kScrFrontZ}, QuatAxis({0, 1, 0}, 180), {1, 1, 1});
   gScr.fixed.clear();
   gScr.buttons.clear();
@@ -599,7 +618,7 @@ void ScrClick(ScrButton const& b) {
 }
 
 void RefreshScreen() {
-  auto skins = ScrSkinNames();
+  auto const& skins = ScrSkinNames();
   gScrSkinPage = std::clamp(gScrSkinPage, 0, ScrPages(skins.size()) - 1);
   for (int i = 0; i < int(gScr.buttons.size()); i++) {
     auto& b = gScr.buttons[i];
@@ -674,8 +693,19 @@ bool RightRay(Vec3& origin, Vec3& dir, Vec3& camPos, float& scale) {
   return true;
 }
 
+// Луч больше не у экрана: спрятать его (если меню на руке открыто — луч уже рисует оно, не трогаем).
+// Без этого меню на руке, видя gHubRay, не прятало бы луч и после выхода из хаба
+void ReleaseHubRay() {
+  if (!gHubRay) return;
+  gHubRay = false;
+  if (!gMenuVisible) DrawRay({}, {0, 0, 1}, 0, {}, 1.f);
+}
+
 void TickScreen() {
-  if (!gScr.built || !Alive(gScr.root.obj)) return;
+  if (!gScr.built || !Alive(gScr.root.obj)) {
+    ReleaseHubRay();
+    return;
+  }
   ScanScrClasses();
 
   // Луч в плоскость экрана (лицо меню — к -Z его осей)
@@ -707,10 +737,10 @@ void TickScreen() {
   if (onScreen) {
     float start = kRayStart * scale;
     DrawRay(origin + dir * start, dir, t - kRayGap * scale - start, camPos, scale);
-  } else if (gHubRay) {
-    DrawRay({}, {0, 0, 1}, 0, camPos, scale);
+    gHubRay = true;
+  } else {
+    ReleaseHubRay();
   }
-  gHubRay = onScreen;
 
   if (hover >= 0 && hover != gScr.hover) Buzz(kRightHand, 0.1f, 0.01f);
   gScr.hover = hover;
@@ -719,8 +749,9 @@ void TickScreen() {
   gScr.point = p;
   if (onScreen) Call<void>(gSetLocalPosition, gScr.cursor.t, ScrPlace(p.x, p.y, kLCursor));
 
-  bool trigger = !gMenuVisible && Button(kRightHand, gTriggerButton);
-  bool down = trigger && !gHubTriggerWas;
+  // Фронт — по самой кнопке: курок, зажатый, пока закрывали меню на руке, — не клик по экрану
+  bool trigger = Button(kRightHand, gTriggerButton);
+  bool down = trigger && !gHubTriggerWas && !gMenuVisible;
   gHubTriggerWas = trigger;
   if (onScreen && down) {
     gScr.pressT = 0;
@@ -964,7 +995,6 @@ struct Projection {
   Il2CppObject* t = nullptr;
   std::vector<Mark> rings;  // «O», лёжа
   Mark scan;
-  std::vector<Mark> strips;
   std::vector<Mark> sparks;
   Mark glow;
   std::vector<Vec3> sparkDir;
@@ -975,7 +1005,7 @@ struct Projection {
 } gFx;
 
 constexpr float kFxR0 = 0.12f;
-constexpr int kFxRings = 2, kFxStrips = 0, kFxSparks = 6;
+constexpr int kFxRings = 2, kFxSparks = 6;
 
 // Буква «O» как плоское кольцо радиуса r на высоте y (в осях эффекта)
 void PlaceRing(Mark& m, float r, float y, char const* color) {
@@ -992,16 +1022,13 @@ void PlaceRing(Mark& m, float r, float y, char const* color) {
 
 bool BuildProjection(Il2CppObject* terminal) {
   auto go = NewGameObject("Skins Projection", terminal);
-  gFx.root = Hold(go);
-  gFx.t = Keep(TransformOf(go));
+  gFx.root = PartHeld(go);
+  gFx.t = HoldPart(TransformOf(go));
   Call<void>(gSetLocalPosition, gFx.t, kHoloLens);
   gFx.rings.assign(kFxRings, Mark{});
   for (auto& m : gFx.rings)
     if (!NewMark(m, gFx.t, 0)) return false;
   if (!NewMark(gFx.scan, gFx.t, 0) || !NewMark(gFx.glow, gFx.t, 0)) return false;
-  gFx.strips.assign(kFxStrips, Mark{});
-  for (auto& m : gFx.strips)
-    if (!NewMark(m, gFx.t, 0)) return false;
   gFx.sparks.assign(kFxSparks, Mark{});
   for (auto& m : gFx.sparks)
     if (!NewMark(m, gFx.t, 0)) return false;
@@ -1038,18 +1065,6 @@ void ShowProjection(float height, float radius) {
   gFx.height = std::max(0.12f, height * 0.3f);
   gFx.r1 = std::clamp(radius + 0.05f, 0.22f, 0.45f);
   gFx.shown = true;
-  // Полосы конуса: от линзы (радиус R0) к верху (r1), лицом наружу
-  for (int i = 0; i < kFxStrips; i++) {
-    float a = i * 6.2832f / kFxStrips;
-    Vec3 radial{std::cos(a), 0, std::sin(a)};
-    Vec3 b = radial * kFxR0, top = radial * gFx.r1 + Vec3{0, gFx.height, 0};
-    Vec3 d = top - b, c = (b + top) * 0.5f;
-    float len = Length3(d);
-    Quat rot = LookRotation(Normalize(radial * -1.f), Normalize(d));
-    Vec3 s{0.006f / gMarkSize.x, len / gMarkSize.y, 1};
-    MarkColor(gFx.strips[i], "4DF2FF1A");
-    SetLocal(gFx.strips[i].t, c - Rotate(rot, Vec3{gMarkCenter.x * s.x, gMarkCenter.y * s.y, 0}), rot, s);
-  }
   // Свечение линзы — квадрат, лёжа
   Quat flat = QuatAxis({1, 0, 0}, 90);
   Vec3 gs{kFxR0 * 1.6f / gMarkSize.x, kFxR0 * 1.6f / gMarkSize.y, 1};
@@ -1094,6 +1109,7 @@ struct Hologram {
   std::string key, name;
   double start = 0;
   std::vector<std::string> logged;
+  std::vector<Held> held;  // узлы копии (NewGameObject) — отпускаются вместе с ней
 } gHolo;
 
 void ClearHologram() {
@@ -1101,6 +1117,8 @@ void ClearHologram() {
   Free(gHolo.skin.cls);
   if (Alive(gHolo.model.obj) && gDestroy) Invoke(gDestroy, nullptr, gHolo.model.obj);
   Free(gHolo.model);
+  for (auto& h : gHolo.held) Free(h);
+  gHolo.held.clear();
 }
 
 void ShowHologram(std::string const& key, std::string const& skinName) {
@@ -1121,7 +1139,11 @@ void ShowHologram(std::string const& key, std::string const& skinName) {
 
   HoloCopy c;
   c.tpose = key != "ROLLER";  // у Roller на «руках» пушки — только двигаем
-  auto model = CopyNode(prefabT, gHolo.pt, c, material);
+  Il2CppObject* model;
+  {
+    KeepInto keep(gHolo.held);
+    model = CopyNode(prefabT, gHolo.pt, c, material);
+  }
   gHolo.model = Hold(model);
   auto mt = TransformOf(model);
   SetLocal(mt, {0, 0, 0}, {0, 0, 0, 1}, {1, 1, 1});
@@ -1195,14 +1217,24 @@ void TickHologram(Vec3 camPos) {
 // ---- зеркало (как Mirror.cs, но одной картинкой на оба глаза: стерео без своего шейдера не сделать) ----
 constexpr int kMirrorTexW = 1024, kMirrorMsaa = 2;  // чётче, чем 512; MSAA — без «лесенки» на краях
 constexpr float kMirrorMaxDistance = 10.f;
-Held gMirrorCam, gMirrorTex, gMirrorGlass;
+Held gMirrorCam, gMirrorTex, gMirrorGlass, gMirrorGlassT, gMirrorMaterial;
 Il2CppObject* gMirrorCamT;
-Il2CppObject* gMirrorGlassT;
 bool gMirrorFailed, gMirrorOn;
 int gBodyLayers, gBodyLayersFrame = -1000;
 
-// Материал для стекла: копия игрового материала, который рисует текстуру. Какие шейдеры есть — в лог
+// Камера зеркала переживает смену сцены (DontDestroyOnLoad): включена — рисует сцену в текстуру каждый кадр.
+// Выключать её всегда, когда зеркала не видно: вне хаба, стекло уничтожено, игрок за зеркалом
+void MirrorCamera(bool on) {
+  if (on == gMirrorOn) return;
+  gMirrorOn = on;
+  if (Alive(gMirrorCam.obj) && gSetBehaviourEnabled) Invoke(gSetBehaviourEnabled, gMirrorCam.obj, &on);
+}
+
+// Материал для стекла: копия игрового материала, который рисует текстуру (одна на все заходы в хаб).
+// Какие шейдеры есть — в лог
 Il2CppObject* MirrorMaterial() {
+  if (Alive(gMirrorMaterial.obj)) return gMirrorMaterial.obj;
+  Free(gMirrorMaterial);
   static char const* const kWanted[] = {"Universal Render Pipeline/Unlit", "Unlit/Texture", "UI/Default",
                                         "Sprites/Default", "Universal Render Pipeline/Simple Lit",
                                         "Universal Render Pipeline/Lit"};
@@ -1222,6 +1254,7 @@ Il2CppObject* MirrorMaterial() {
     if (it == byShader.end()) continue;
     auto copy = gInstantiateOne ? Invoke(gInstantiateOne, nullptr, it->second) : nullptr;
     LOG(ANDROID_LOG_INFO, "зеркало: стекло — '%s' (%s)%s", NameOf(it->second).c_str(), w, copy ? "" : ", копию сделать не вышло");
+    gMirrorMaterial = Hold(copy);
     return copy;
   }
   LOG(ANDROID_LOG_WARN, "зеркало: нет шейдера с текстурой — зеркала не будет");
@@ -1250,7 +1283,7 @@ Il2CppObject* BuildMirror() {
     } else if (name == "Glass") {
       SetLocal(c, {0, 0, -0.003f}, {0, 0, 0, 1}, {kMirrorW, kMirrorH, 1});
       gMirrorGlass = Hold(GameObjectOf(c));
-      gMirrorGlassT = Keep(c);
+      gMirrorGlassT = Hold(c);
     }
   }
   // Сквозь зеркало не пройти: коробка по рамке, 30 см в комнату
@@ -1263,7 +1296,7 @@ Il2CppObject* BuildMirror() {
       Invoke(gBoxSetCenter, box, &center);
     }
   }
-  if (!gMirrorGlassT) return root;
+  if (!gMirrorGlassT.obj) return root;
 
   if (!Alive(gMirrorTex.obj)) {
     Free(gMirrorTex);
@@ -1334,24 +1367,24 @@ Mat4 Frustum(float l, float r, float b, float t, float n, float f) {
 // Зеркало: камера в точке, симметричной глазу относительно стекла, смотрит в комнату через стекло
 // (внеосевая проекция). Одна картинка на оба глаза — в шлеме может укачивать (экран-камера не понравилась)
 void TickMirror() {
-  if (!Alive(gMirrorCam.obj) || !gMirrorGlassT || !Alive(gMirrorGlass.obj)) return;
+  if (!Alive(gMirrorCam.obj) || !Alive(gMirrorGlassT.obj) || !Alive(gMirrorGlass.obj)) {
+    MirrorCamera(false);
+    return;
+  }
   auto eye = Call<Il2CppObject*>(gGetMainCamera);
   bool show = eye != nullptr;
   Vec3 c{}, n{}, e{};
   float side = 0;
   Quat glassRot{0, 0, 0, 1};
   if (show) {
-    glassRot = Call<Quat>(gGetRotation, gMirrorGlassT);
-    c = Call<Vec3>(gGetPosition, gMirrorGlassT);
+    glassRot = Call<Quat>(gGetRotation, gMirrorGlassT.obj);
+    c = Call<Vec3>(gGetPosition, gMirrorGlassT.obj);
     n = Rotate(glassRot, {0, 0, -1});  // в комнату
     e = Call<Vec3>(gGetPosition, TransformOfComponent(eye));
     side = Dot(e - c, n);
     show = side > 0.05f && Length3(e - c) < kMirrorMaxDistance;
   }
-  if (show != gMirrorOn) {
-    gMirrorOn = show;
-    Invoke(gSetBehaviourEnabled, gMirrorCam.obj, &show);
-  }
+  MirrorCamera(show);
   if (!show) return;
 
   Vec3 up = Rotate(glassRot, {0, 1, 0});
@@ -1386,7 +1419,7 @@ void TickMirror() {
 // ---- мебель в пещере у лавы ----
 // Префаб «Furniture» из Hub.bundle — уже в мировых координатах хаба (расставлена в Unity, Assets/Hub/HubCave.unity):
 // ставим в (0, 0, 0), материал тела игры (цвета вершин), коллизия по мешам
-Held gFurniture;
+Held gFurniture, gFurnitureLight;  // gFurnitureLight — MaterialPropertyBlock со светом зонда
 bool gFurnitureFailed;
 
 Il2CppObject* BuildFurniture() {
@@ -1411,7 +1444,9 @@ Il2CppObject* BuildFurniture() {
       {"unity_SHC", {-0.17845f, -0.07614f, -0.02379f, 1.f}}};
   Il2CppObject* block = nullptr;
   if (gPropertyBlockClass && gPropertyBlockCtor && gPropertyBlockSetVector && gSetPropertyBlock && gSetLightProbeUsage) {
-    block = Keep(il2cpp_object_new(gPropertyBlockClass));
+    Free(gFurnitureLight);  // рендереры копируют блок в SetPropertyBlock — прежний больше не нужен
+    gFurnitureLight = Hold(il2cpp_object_new(gPropertyBlockClass));
+    block = gFurnitureLight.obj;
     Invoke(gPropertyBlockCtor, block);
     for (auto const& [name, v] : kProbe) {
       V4 value = v;
@@ -1489,7 +1524,8 @@ bool MeasureHubMark(Il2CppObject* terminal) {
 
 // Меню на экране, голограмма и эффекты — когда есть шрифт и измерена подложка
 void BuildTerminalParts() {
-  if (gScr.built || gMenuFailed || !gHasBackground || !gGameFont) return;
+  if (gScr.built || gScr.failed || gMenuFailed || !gHasBackground || !gGameFont) return;
+  KeepInto keep(gTerminalHeld);  // всё, что ниже создаётся, отпускает FreeTerminalParts
   if (!gHubFont) {
     auto pixel = MenuFont(gGameFont);
     gHubFont = pixel ? pixel : gGameFont;
@@ -1498,24 +1534,39 @@ void BuildTerminalParts() {
   if (!MeasureHubMark(t)) return;
   if (!BuildScreen(t)) {
     LOG(ANDROID_LOG_ERROR, "терминал: меню на экране не собралось");
-    gScr.built = true;  // не собирать заново каждый кадр
+    // Недостроенное меню (без курсора и части кнопок) не оставляем: TickScreen работает только с built
+    if (gDestroy && Alive(gScr.root.obj)) Invoke(gDestroy, nullptr, gScr.root.obj);
+    gScr.failed = true;  // не собирать заново каждый кадр
   }
   auto pivot = NewGameObject("Skins Hologram", t);
-  gHolo.pivot = Hold(pivot);
-  gHolo.pt = Keep(TransformOf(pivot));
+  gHolo.pivot = PartHeld(pivot);
+  gHolo.pt = HoldPart(TransformOf(pivot));
   gHolo.start = Now();
   if (!BuildProjection(t)) LOG(ANDROID_LOG_ERROR, "терминал: эффекты пьедестала не собрались");
 }
 
+// Терминал уничтожен (смена сцены): отпустить меню, голограмму, эффекты и все их handle
+void FreeTerminalParts() {
+  ReleaseHubRay();
+  ClearHologram();
+  gScr = Screen{};
+  gFx = Projection{};
+  gHolo.pivot = {};
+  gHolo.pt = nullptr;
+  for (auto& h : gTerminalHeld) Free(h);
+  gTerminalHeld.clear();
+}
+
 void TickHub() {
-  if (gHubFailed || !gSkinsLoaded || !InHubScene()) return;
+  if (gHubFailed || !gSkinsLoaded || !InHubScene()) {
+    // Вне хаба уголок не тикает — но камера зеркала и луч не должны остаться включёнными
+    MirrorCamera(false);
+    ReleaseHubRay();
+    return;
+  }
   if (!Alive(gTerminal.obj)) {
     Free(gTerminal);
-    gScr = Screen{};
-    Free(gHolo.pivot);
-    gHolo.pt = nullptr;
-    ClearHologram();
-    gFx = Projection{};
+    FreeTerminalParts();
     Free(gProbe);
     if (++gHubBuildFrames % 30 != 1) return;  // не каждый кадр, если что-то не готово
     gTerminal = Hold(BuildTerminal());
@@ -1530,8 +1581,8 @@ void TickHub() {
   if (!gMirrorFailed && !Alive(gMirror.obj)) {
     Free(gMirror);
     Free(gMirrorGlass);
-    gMirrorGlassT = nullptr;
-    gMirrorOn = false;
+    Free(gMirrorGlassT);
+    MirrorCamera(false);
     gMirror = Hold(BuildMirror());
     if (!gMirror.obj) gMirrorFailed = true;
   }
