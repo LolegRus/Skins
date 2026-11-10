@@ -27,13 +27,6 @@ MethodInfo const* gActiveScene;     // SceneManager.GetActiveScene
 MethodInfo const* gSceneName;       // Scene.get_name (у значения — this по указателю)
 MethodInfo const* gGetActiveSelf;
 MethodInfo const* gRendererEnabled;
-MethodInfo const* gSetReceiveShadows;
-// Свет мебели — свой световой зонд (как на ПК: тёплый полумрак + свет от лавы): векторы unity_SH* в MaterialPropertyBlock
-Il2CppClass* gPropertyBlockClass;
-MethodInfo const* gPropertyBlockCtor;
-MethodInfo const* gPropertyBlockSetVector;   // SetVector(string, Vector4)
-MethodInfo const* gSetPropertyBlock;         // Renderer.SetPropertyBlock(MaterialPropertyBlock)
-MethodInfo const* gSetLightProbeUsage;       // Renderer.set_lightProbeUsage  // мебель в пещере — без теней (иначе её затеняет потолок)
 MethodInfo const* gMeshBoundsHub;   // Mesh.get_bounds
 void (*gMeshBoundsIcall)(void*, void*);
 MethodInfo const* gInstantiateOne;  // Object.Instantiate(Object) — копия материала
@@ -137,7 +130,7 @@ Bounds MeshBounds(Il2CppObject* mesh) {
 }
 
 // ---- бандл хаба ----
-Held gHubBundleH, gTerminalPrefab, gMirrorPrefab, gFurniturePrefab;
+Held gHubBundleH, gTerminalPrefab, gMirrorPrefab;
 bool gHubBundleFailed;
 
 Il2CppObject* HubAsset(Held& slot, char const* name) {
@@ -1416,62 +1409,6 @@ void TickMirror() {
   }
 }
 
-// ---- мебель в пещере у лавы ----
-// Префаб «Furniture» из Hub.bundle — уже в мировых координатах хаба (расставлена в Unity, Assets/Hub/HubCave.unity):
-// ставим в (0, 0, 0), материал тела игры (цвета вершин), коллизия по мешам
-Held gFurniture, gFurnitureLight;  // gFurnitureLight — MaterialPropertyBlock со светом зонда
-bool gFurnitureFailed;
-
-Il2CppObject* BuildFurniture() {
-  auto prefab = HubAsset(gFurniturePrefab, "Furniture");
-  auto material = BodyMaterial();
-  if (!prefab || !material) return nullptr;
-  auto go = Instantiate(prefab, nullptr);
-  if (!go) return nullptr;
-  Invoke(gSetObjectName, go, il2cpp_string_new("Skins Furniture"));
-  auto t = TransformOf(go);
-  Call<void>(gSetPosition, t, Vec3{0, 0, 0});
-  Call<void>(gSetRotation, t, Quat{0, 0, 0, 1});
-  PaintBody(t, material, true);
-  // Свет: числа — из лога ПК («Мебель: свет зонда (для Quest)»), там же они считаются из CaveAmbient/LavaLight
-  struct V4 {
-    float x, y, z, w;
-  };
-  static const std::pair<char const*, V4> kProbe[] = {
-      {"unity_SHAr", {0.29929f, 0.59859f, -0.22447f, 0.72978f}}, {"unity_SHAg", {0.12770f, 0.25540f, -0.09577f, 0.37337f}},
-      {"unity_SHAb", {0.03991f, 0.07981f, -0.02993f, 0.18730f}}, {"unity_SHBr", {0.47588f, -0.35691f, -0.23050f, -0.17845f}},
-      {"unity_SHBg", {0.20304f, -0.15228f, -0.09835f, -0.07614f}}, {"unity_SHBb", {0.06345f, -0.04759f, -0.03073f, -0.02379f}},
-      {"unity_SHC", {-0.17845f, -0.07614f, -0.02379f, 1.f}}};
-  Il2CppObject* block = nullptr;
-  if (gPropertyBlockClass && gPropertyBlockCtor && gPropertyBlockSetVector && gSetPropertyBlock && gSetLightProbeUsage) {
-    Free(gFurnitureLight);  // рендереры копируют блок в SetPropertyBlock — прежний больше не нужен
-    gFurnitureLight = Hold(il2cpp_object_new(gPropertyBlockClass));
-    block = gFurnitureLight.obj;
-    Invoke(gPropertyBlockCtor, block);
-    for (auto const& [name, v] : kProbe) {
-      V4 value = v;
-      Invoke(gPropertyBlockSetVector, block, il2cpp_string_new(name), &value);
-    }
-  }
-  std::vector<HandNode> nodes;
-  WalkNodes(t, 0, nodes);
-  bool no = false;
-  int32_t custom = 4;  // LightProbeUsage.CustomProvided
-  int lit = 0;
-  for (auto& n : nodes)
-    if (auto r = Component(GameObjectOf(n.t), gRendererType)) {
-      if (gSetReceiveShadows) Invoke(gSetReceiveShadows, r, &no);
-      if (block) {
-        Invoke(gSetLightProbeUsage, r, &custom);
-        Invoke(gSetPropertyBlock, r, block);
-        lit++;
-      }
-    }
-  LOG(ANDROID_LOG_INFO, "мебель: свет зонда на %d рендерерах", lit);
-  LOG(ANDROID_LOG_INFO, "мебель: поставлена (%d предметов)", ChildCount(t));
-  return go;
-}
-
 // ---- уголок целиком ----
 Held gTerminal, gMirror;
 int gHubBuildFrames;
@@ -1573,11 +1510,6 @@ void TickHub() {
     if (!gTerminal.obj) return;
   }
   BuildTerminalParts();
-  if (!gFurnitureFailed && !Alive(gFurniture.obj)) {
-    Free(gFurniture);
-    gFurniture = Hold(BuildFurniture());
-    if (!gFurniture.obj) gFurnitureFailed = true;
-  }
   if (!gMirrorFailed && !Alive(gMirror.obj)) {
     Free(gMirror);
     Free(gMirrorGlass);
@@ -1614,17 +1546,6 @@ bool InitHub(Il2CppImage const* core) {
   gSceneName = Method(scene, "get_name", 0);
   gGetActiveSelf = Method(gGameObjectClass, "get_activeSelf", 0);
   gRendererEnabled = Method(renderer, "get_enabled", 0, false);
-  gSetReceiveShadows = Method(renderer, "set_receiveShadows", 1, false);
-  gSetPropertyBlock = FindOverload(renderer, "SetPropertyBlock", 1, "MaterialPropertyBlock", nullptr, false);
-  gSetLightProbeUsage = Method(renderer, "set_lightProbeUsage", 1, false);
-  gPropertyBlockClass = il2cpp_class_from_name(core, "UnityEngine", "MaterialPropertyBlock");
-  if (gPropertyBlockClass) {
-    gPropertyBlockCtor = Method(gPropertyBlockClass, ".ctor", 0, false);
-    gPropertyBlockSetVector = FindOverload(gPropertyBlockClass, "SetVector", 2, "String", "Vector4", false);
-  }
-  LOG(ANDROID_LOG_INFO, "хаб: свет мебели — блок %s, SetVector %s, SetPropertyBlock %s, lightProbeUsage %s",
-      gPropertyBlockCtor ? "да" : "нет", gPropertyBlockSetVector ? "да" : "нет", gSetPropertyBlock ? "да" : "нет",
-      gSetLightProbeUsage ? "да" : "нет");
   gMeshBoundsHub = mesh ? Method(mesh, "get_bounds", 0, false) : nullptr;
   if (!gMeshBoundsHub) Icall(gMeshBoundsIcall, "UnityEngine.Mesh::get_bounds_Injected");
   gInstantiateOne = FindOverload(object, "Instantiate", 1, "Object", nullptr, false);
