@@ -34,7 +34,7 @@
 - Every class has its own skins. Pick one in the menu — the mod remembers it.
 - Players with the mod see your skin, and you see theirs. On PC and on Quest.
 - Your team color stays.
-- In the hub there is a skin terminal: look through every skin of every class and see it spin on the hologram stand. Next to it is a mirror, and in the lava cave there is a little hangout with furniture.
+- In the hub there is a skin terminal: look through every skin of every class and see it spin on the hologram stand. Next to it is a mirror.
 
 ## Skins
 
@@ -112,7 +112,7 @@ Something doesn't work, or you have an idea? Write to us on [Discord](https://di
 - У каждого класса свои скины. Выбираешь в меню — мод запомнит.
 - Игроки с модом видят твой скин, а ты их. И на ПК, и на Quest.
 - Цвет команды остаётся.
-- В хабе есть терминал скинов: смотри все скины всех классов, а выбранный крутится голограммой на подставке. Рядом — зеркало, а в пещере у лавы — уголок отдыха с мебелью.
+- В хабе есть терминал скинов: смотри все скины всех классов, а выбранный крутится голограммой на подставке. Рядом — зеркало.
 
 ## Скины
 
