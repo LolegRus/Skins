@@ -27,3 +27,6 @@ Unity/Assets/Hub/_build.meta
 
 # Сборка Quest-версии (build-quest.ps1): .so, .qmod и Android-бандлы из Unity
 Quest/build/
+
+# Заметки для Claude — только локально, в публичную репо не попадают
+CLAUDE.md
