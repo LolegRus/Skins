@@ -7,7 +7,7 @@
 > New models for DUST characters. Other players with the mod see them too.
 
 > [!WARNING]
-> **Update to v0.9.0 now!** Versions 0.1.0–0.8.0 no longer work: they can't see skins from players on 0.9.0 and leave junk data on the server. Download the new version below and replace the old file (PC and Quest).
+> **Still on v0.8.0 or older? Update now!** Versions 0.1.0–0.8.0 no longer work: they can't see skins from newer versions and leave junk data on the server. Download the latest version below and replace the old file (PC and Quest).
 
 ### ⬇️ [Download for PC](https://github.com/LolegRus/Skins/releases/latest/download/Skins.dll) · [Download for Quest](https://github.com/LolegRus/Skins/releases/latest/download/Skins.qmod) · 💬 [Discord](https://discord.gg/KM5YC5FjH)
 
@@ -102,7 +102,7 @@ Something doesn't work, or you have an idea? Write to us on [Discord](https://di
 > Новые модели для персонажей DUST. Их видят и другие игроки с модом.
 
 > [!WARNING]
-> **Срочно обновись до v0.9.0!** Версии 0.1.0–0.8.0 больше не работают: они не видят скины игроков с 0.9.0 и оставляют мусор на сервере. Скачай новую версию ниже и замени старый файл (ПК и Quest).
+> **У тебя версия 0.8.0 или ниже? Срочно обнови!** Версии 0.1.0–0.8.0 больше не работают: они не видят скины игроков с новыми версиями и оставляют мусор на сервере. Скачай последнюю версию ниже и замени старый файл (ПК и Quest).
 
 ### ⬇️ [Скачать для ПК](https://github.com/LolegRus/Skins/releases/latest/download/Skins.dll) · [Скачать для Quest](https://github.com/LolegRus/Skins/releases/latest/download/Skins.qmod) · 💬 [Discord](https://discord.gg/KM5YC5FjH)
 
