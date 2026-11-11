@@ -5,7 +5,7 @@ using UnityEngine;
 
 /// <summary>
 /// Терминал скинов для хаба (модель Cinder, Assets/Hub/terminal.fbx) → бандл Windows → Skins\Hub.bundle
-/// (зашивается в DLL ПК-мода) и бандл Android → Quest mods\Skins\build\Hub.bundle. В бандле — префаб «Terminal»:
+/// (зашивается в DLL ПК-мода) и бандл Android → Skins\Quest\build\Hub.bundle. В бандле — префаб «Terminal»:
 /// монитор, кабели, голо-пьедестал (на нём мод крутит голограмму скина) — и «Mirror» (детали зеркала для Quest).
 /// Оси модели: +Z — в комнату, Y — вверх, начало координат — на полу под центром пьедестала, центр монитора по X = 0.
 /// Материалы мод ставит сам (материал класса игры: вершинные цвета, альфа 0 — цвет команды), из FBX нужны только слоты.
@@ -70,7 +70,7 @@ public static class HubBuilder
         File.Copy(Path.Combine(OutDir, BundleName), Path.Combine(PcDir, FileName), true);
         Debug.Log($"[Skins] {FileName} → {Path.GetFullPath(PcDir)}");
 
-        // Quest: тот же префаб под Android → Quest mods\Skins\build\Hub.bundle (в .qmod через fileCopies mod.json)
+        // Quest: тот же префаб под Android → Skins\Quest\build\Hub.bundle (в .qmod через fileCopies mod.json)
         Directory.CreateDirectory(AndroidOutDir);
         if (BuildPipeline.BuildAssetBundles(AndroidOutDir, new[] { build }, BuildAssetBundleOptions.ChunkBasedCompression,
                 BuildTarget.Android) == null)
@@ -88,7 +88,7 @@ public static class HubBuilder
     }
 
     private const string AndroidOutDir = "Build/AndroidHub";
-    private const string QuestBuildDir = @"..\..\Quest mods\Skins\build";
+    private const string QuestBuildDir = @"..\Quest\build";
 
     // Детали зеркала для Quest (там меш из кода собирать неудобно): префаб «Mirror» с детьми «Glass» —
     // квад 1 × 1 лицом к -Z с отражённой по горизонтали развёрткой — и «Frame» — куб 1 × 1 × 1.

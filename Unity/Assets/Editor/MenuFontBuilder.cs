@@ -6,7 +6,7 @@ using UnityEngine.TextCore.LowLevel;
 
 /// <summary>
 /// Пиксельный шрифт меню скинов: Pixelify Sans (Assets/Fonts, лицензия OFL — PixelifySans-OFL.txt).
-/// Quest: шрифт TextMeshPro со статическим атласом (ASCII) → бандл Android → Quest mods\Skins\build\MenuFont.font
+/// Quest: шрифт TextMeshPro со статическим атласом (ASCII) → бандл Android → Skins\Quest\build\MenuFont.font
 /// (идёт в .qmod через fileCopies mod.json). Мод сам заменит шейдер материала на шейдер шрифта игры:
 /// в этом проекте нет XR, и шейдер из бандла рисовался бы в шлеме одним глазом.
 /// ПК: сам TTF (Font для IMGUI) → бандл Windows → Skins\MenuFont.font (зашивается в DLL).
@@ -21,7 +21,7 @@ public static class MenuFontBuilder
     private const string Asset = "Assets/Fonts/PixelifySans SDF.asset";   // в бандле — «PixelifySans SDF»; генерируется
     private const string Essentials = "Packages/com.unity.ugui/Package Resources/TMP Essential Resources.unitypackage";
     private const string OutDir = "Build/AndroidFont";
-    private const string QuestBuildDir = @"..\..\Quest mods\Skins\build";
+    private const string QuestBuildDir = @"..\Quest\build";
     private const string PcOutDir = "Build/WindowsFont";
     private const string PcDir = @"..\Skins";   // Skins\MenuFont.font — EmbeddedResource ПК-мода
     private const string BundleName = "menufont";

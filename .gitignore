@@ -24,3 +24,6 @@ Unity/Assets/Fonts/PixelifySans SDF.asset
 Unity/Assets/Fonts/PixelifySans SDF.asset.meta
 Unity/Assets/Hub/_build/
 Unity/Assets/Hub/_build.meta
+
+# Сборка Quest-версии (build-quest.ps1): .so, .qmod и Android-бандлы из Unity
+Quest/build/

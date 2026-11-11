@@ -27,7 +27,7 @@ using Object = UnityEngine.Object;
 /// Так модам не нужно ни считать позы, ни править вершины — на Quest это и не получилось бы.
 ///
 /// Бандлы: Build/Windows → игра UserData\Skins\&lt;Имя&gt;.skin и Skins\Builtin\ (зашиваются в DLL),
-/// Build/Android → Quest mods\Skins\build\&lt;Имя&gt;.skin (идут в .qmod — допиши их в fileCopies mod.json).
+/// Build/Android → Skins\Quest\build\&lt;Имя&gt;.skin (идут в .qmod — допиши их в fileCopies mod.json).
 ///
 /// Командная строка:
 ///   Unity.exe -batchmode -nographics -projectPath Unity -executeMethod SkinBuilder.BuildAll -quit
@@ -40,7 +40,7 @@ public static class SkinBuilder
     private const string HideFile = "hide.txt";    // детали игры, которые скин прячет, — по одной на строку
     private const string FittedDir = "_build";     // подогнанные меши и плоские префабы — генерируются
     private const string DefaultDustPath = @"C:\Users\loleg\Desktop\DUST\Dust 0.8.4";
-    private const string QuestBuildDir = @"..\..\Quest mods\Skins\build";
+    private const string QuestBuildDir = @"..\Quest\build";
     private const string BuiltinDir = @"..\Skins\Builtin";   // скины, которые идут с ПК-модом (EmbeddedResource)
     private const string OwnMaterialPrefix = "Own";
 

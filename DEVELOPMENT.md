@@ -1,7 +1,12 @@
 # Skins — для разработки
 
-Этот файл есть только в приватной репо `LolegRus/Skins-source`. Публичная `LolegRus/Skins` — страница для игроков:
-там только `README.md`, `LICENSE` и релизы (`Skins.dll` + `Skins.qmod`).
+Что где лежит:
+
+- `Skins\` — мод для ПК (C#, MelonLoader);
+- `Quest\` — версия для автономного Quest (C++, Scotland2 + Flamingo);
+- `Unity\` — Unity-проект: модели скинов (авторы — Cinder), сборщики бандлов, дампы классов игры.
+
+Код открыт для чтения, но права на мод и модели остаются у авторов — см. `LICENSE`.
 
 ## Сборка из исходников
 
@@ -12,6 +17,10 @@ dotnet build Skins/Skins.csproj -c Release -p:DustPath="D:\Games\Dust 0.8.4"
 ```
 
 Готовая DLL сама скопируется в папку игры `Mods`.
+
+Версия для Quest собирается общим для всех модов скриптом `build-quest.ps1` (`clang++` из Android NDK, без CMake):
+`Quest\src\*.cpp` → `Quest\build\libskins.so` → `Quest\build\Skins.qmod`. Перед этим Unity-проект должен положить
+в `Quest\build\` Android-бандлы скинов, `Hub.bundle` и `MenuFont.font` (**Tools → Skins → Build All / Build Hub Terminal / Build Menu Font**).
 
 ## Как сделать свой скин
 
@@ -36,11 +45,3 @@ Build Hub Terminal** (`-executeMethod HubBuilder.Build`) в `Skins\Hub.bundle`, 
 Надписи — TextMeshPro шрифтом Pixelify Sans: SDF-шрифт теперь есть и в бандле ПК `MenuFont.font` (Build Menu Font).
 Место — в коде: сцена `The Hub`, точка на стене и её нормаль (`Hub.MonitorAt`, `Hub.MirrorAt`); терминал и зеркало
 сами встают на пол. Зеркало (`Mirror.cs`) — камера за стеклом, своё тело на время его кадра показывается; выключается `Hub.MirrorOn`.
-
-## Публикация
-
-README и LICENSE — общие для обеих репо: правишь здесь, потом отправляешь в публичную (из `repos\` в Git Bash):
-
-```
-./publish-public.sh Skins "Update the README"
-```
