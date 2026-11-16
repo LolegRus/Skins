@@ -708,7 +708,7 @@ void TickScreen() {
   Vec3 p{};
   float t = 0;
   int hover = -1;
-  if (!gMenuVisible && RightRay(origin, dir, camPos, scale)) {
+  if (!MenusOpen() && RightRay(origin, dir, camPos, scale)) {
     Pose3 ui = WorldPose(gScr.ui);
     Vec3 o = ToLocal(ui, origin), d = Rotate(Conj(ui.r), dir);
     d = Div(d, ui.s);
@@ -744,7 +744,7 @@ void TickScreen() {
 
   // Фронт — по самой кнопке: курок, зажатый, пока закрывали меню на руке, — не клик по экрану
   bool trigger = Button(kRightHand, gTriggerButton);
-  bool down = trigger && !gHubTriggerWas && !gMenuVisible;
+  bool down = trigger && !gHubTriggerWas && !MenusOpen();
   gHubTriggerWas = trigger;
   if (onScreen && down) {
     gScr.pressT = 0;

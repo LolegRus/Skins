@@ -9,7 +9,7 @@
 //   «+путь узла» — новые детали: дети вешаются на этот узел, материал повторяют за ближайшим рендерером.
 // Путь — от корня класса, без его имени: «Anchors/Head Anchor/Head».
 //
-// Меню — нажатие левого стика (как у TimeControl — вместе их не ставить): панель над левой рукой,
+// Меню — общее меню модов (dustmenu.h): левый стик → список «Mods» → Skins (без других модов — сразу); панель над левой рукой,
 // только скины текущего класса, плитки страницами по 4; наведи луч правой руки и жми курок.
 // Уголок скинов в хабе (терминал, голограмма, зеркало) — в hub.inc. Выбор пишется в
 // kSkinDir/skins.cfg («KOBOLD=Cowboy», пусто — родной вид); без строки — первый скин класса.
@@ -38,10 +38,13 @@
 
 #include "flamingo-capi.h"
 #include "modloader.h"
+#include "dustmenu.h"
 
 #define LOG(prio, ...) __android_log_print(prio, "Skins", __VA_ARGS__)
 
 namespace {
+
+namespace dm = dustmenu;
 
 struct Il2CppDomain;
 struct Il2CppAssembly;
@@ -408,7 +411,6 @@ Il2CppObject* gMatchmakerType;
 Il2CppObject* gTextMeshProType;
 Il2CppObject* gFontAssetType;
 Il2CppString* gTriggerButton;
-Il2CppString* gStickClick;
 Il2CppString* gDevicePosition;
 Il2CppString* gDeviceRotation;
 Il2CppString* gPointerPosition;
@@ -1318,7 +1320,7 @@ void HookOnReceive(Il2CppObject* self, NetSpan message, NetDid sender, MethodInf
 // ---------- меню (левый стик) ----------
 // Панель над левой рукой: только класс, за который играешь, его скины — плитками по две в ряд
 // (первая — родной вид). Наведи правый контроллер на плитку и жми курок. Тексты — по-английски.
-// Позы рук — как в TimeControl: InputDevices дают их в пространстве трекинга,
+// Позы рук: InputDevices дают их в пространстве трекинга,
 // в мир переводим через камеру: rig = camera * inverse(head).
 
 constexpr int kHead = 3;       // XRNode.Head
@@ -1336,6 +1338,9 @@ constexpr int kMaxTiles = 4;
 constexpr float kTileWidth = 0.090f, kTileHeight = 0.030f, kTileGap = 0.006f;
 constexpr float kNavY = 0.054f - 2 * (kTileHeight + kTileGap);  // ряд стрелок — на месте третьего ряда плиток
 constexpr float kNavX = 0.066f, kNavWidth = 0.036f, kNavHeight = 0.022f;
+// «< Mods» (общее меню модов, dustmenu.h) — справа в заголовке, на месте подсказки
+constexpr float kBackWidth = 0.044f, kBackHeight = 0.018f;
+constexpr float kBackX = kPanelWidth / 2 - kPadX - kBackWidth / 2;
 // ТЕСТ: столько кнопок-заглушек («Test 1»…) добавляется к скинам — проверить страницы. Перед релизом — 0
 constexpr int kTestTiles = 0;
 constexpr float kBorder = 0.0015f;  // толщина контура панели и надетой плитки
@@ -1364,7 +1369,8 @@ constexpr int kTextCount = kCursorText + 1;
 // без фона — буква «o».
 enum { kPanelOutline, kPanelFill, kWornOutline, kTileFills };
 constexpr int kPrevFill = kTileFills + kMaxTiles, kNextFill = kPrevFill + 1;  // кнопки страниц
-constexpr int kCursorOutline = kNextFill + 1, kCursorDot = kCursorOutline + 1;
+constexpr int kBackFill = kNextFill + 1;  // «< Mods» в заголовке (есть другие моды с общим меню)
+constexpr int kCursorOutline = kBackFill + 1, kCursorDot = kCursorOutline + 1;
 constexpr int kShapeCount = kCursorDot + 1;
 constexpr int kParts = 3;  // прямоугольников в фигуре
 constexpr int kRectCount = kShapeCount * kParts;
@@ -1428,7 +1434,7 @@ int gMeasureFrames;
 Held gMenuRoot;
 Il2CppObject* gMenuTransform;
 Il2CppObject* gCursorTransform;
-bool gMenuFailed, gMenuVisible, gStickWas, gTriggerWas, gUsePointerPose = true;
+bool gMenuFailed, gMenuVisible, gTriggerWas, gUsePointerPose = true;
 float gMenuScale = 1.f;
 std::vector<SkinFile*> gTiles;       // скины на плитках 1..N (плитка 0 — родной вид)
 std::vector<std::string> gTestNames;  // ТЕСТ: заглушки после скинов (kTestTiles)
@@ -1436,6 +1442,7 @@ std::string gTestPick;               // ТЕСТ: выбранная заглу�
 int gPage;                           // текущая страница
 int gHovered = -1;                   // ячейка страницы под лучом (0…kMaxTiles-1), -1 — нет
 int gHoverNav;                       // кнопка страниц под лучом: -1 «<», +1 «>», 0 — нет
+bool gHoverBack;                     // луч на «< Mods»
 bool gOnPanel;                  // луч на панели — показываем курсор
 
 uint64_t Device(int node) { return Call<uint64_t>(gGetDeviceId, node); }
@@ -1473,50 +1480,21 @@ Il2CppObject* FindFont() {
 }
 
 // Пиксельный шрифт меню — Pixelify Sans (лицензия OFL): бандл MenuFont.font рядом со скинами,
-// собирает Skins\Unity (Tools → Skins → Build Menu Font). Нет файла или не загрузился — шрифт игры.
-// Шейдер материала берём у шрифта игры: в бандле он без стерео-вариантов и рисовался бы одним глазом.
+// собирает Skins\Unity (Tools → Skins → Build Menu Font). Ищет и грузит его общее меню модов (dustmenu.h):
+// если шрифт уже загрузил другой мод с общим меню (у него своя копия бандла), берётся тот —
+// второй раз тот же бандл Unity не загрузит. Нет шрифта — шрифт игры (dustmenu попробует ещё раз позже).
+// Шейдер материала — у шрифта игры: в бандле он без стерео-вариантов и рисовался бы одним глазом.
 // В атласе только ASCII — имена с другими буквами пишем шрифтом игры.
-constexpr char kMenuFontFile[] = "MenuFont.font";
-constexpr char kMenuFontAsset[] = "PixelifySans SDF";
-MethodInfo const* gFontMaterial;  // TMP_Asset.get_material
-MethodInfo const* gGetShader;     // Material.get_shader / set_shader
-MethodInfo const* gSetShader;
-Held gFontBundle, gMenuFont;
-bool gMenuFontFailed;
+Held gMenuFont;
+MethodInfo const* gGetShader;  // Material.get_shader — им уголок в хабе узнаёт материал тела (hub.inc)
 Il2CppObject* gGameFont;  // шрифт игры — для имён не латиницей
 Il2CppObject* gTileFontObj[kMaxTiles];
 
-Il2CppObject* MenuFont(Il2CppObject* gameFont) {
-  if (gMenuFontFailed) return nullptr;
+Il2CppObject* MenuFont(Il2CppObject*) {
   if (Alive(gMenuFont.obj)) return gMenuFont.obj;
   Free(gMenuFont);
-  auto fail = [](char const* why) -> Il2CppObject* {
-    gMenuFontFailed = true;
-    LOG(ANDROID_LOG_WARN, "шрифт меню: %s — шрифт игры", why);
-    return nullptr;
-  };
-  if (!gFontMaterial || !gGetShader || !gSetShader) return fail("нет get_material/shader");
-  if (!Alive(gFontBundle.obj)) {
-    Free(gFontBundle);
-    std::string path = std::string(kSkinDir) + kMenuFontFile;
-    if (FILE* f = fopen(path.c_str(), "rb")) {
-      fclose(f);
-    } else {
-      return fail("нет файла MenuFont.font");
-    }
-    gFontBundle = Hold(LoadBundle(path));
-    if (!gFontBundle.obj) return fail("бандл не загрузился");
-  }
-  auto font = LoadAsset(gFontBundle.obj, kMenuFontAsset, gFontAssetType);
-  if (!font) return fail("нет шрифта в бандле");
-  auto ours = Invoke(gFontMaterial, font);
-  auto theirs = gameFont ? Invoke(gFontMaterial, gameFont) : nullptr;
-  auto shader = theirs ? Invoke(gGetShader, theirs) : nullptr;
-  if (!ours || !shader) return fail("нет материала или шейдера");
-  Invoke(gSetShader, ours, shader);
-  gMenuFont = Hold(font);
-  LOG(ANDROID_LOG_INFO, "шрифт меню: Pixelify Sans");
-  return font;
+  gMenuFont = Hold(reinterpret_cast<Il2CppObject*>(dm::PixelFont()));
+  return gMenuFont.obj;
 }
 
 bool IsAscii(std::string const& s) {
@@ -1596,7 +1574,7 @@ bool BuildMenu() {
   // Класс и подсказка — у левого и правого края, по половине ширины панели на каждую
   float half = kPanelWidth / 2 - kPadX;
   gTextPos[kClassText] = {-half / 2, kHeaderY, 0};
-  gTextPos[kHintText] = {half / 2, kHeaderY, 0};
+  gTextPos[kHintText] = dm::HasPeers() ? Vec3{kBackX, kHeaderY, 0} : Vec3{half / 2, kHeaderY, 0};  // «< Mods» или подсказка
   if (!gSetSizeDelta) gTextPos[kClassText].x = 0;  // по центру; подсказки тогда нет — места на обе не хватит
   gTileFont = kFontSize;
   gTextPos[kNoteText] = {0, 0.062f, 0};
@@ -1617,7 +1595,7 @@ bool BuildMenu() {
       gRectPos[i] = {0, 0, 0};
     }
   for (int i = 0; i < kTextCount; i++) {
-    int align = i == kClassText ? kAlignLeft : i == kHintText ? kAlignRight : kAlignCenter;
+    int align = i == kClassText ? kAlignLeft : i == kHintText && !dm::HasPeers() ? kAlignRight : kAlignCenter;
     gTexts[i] = NewText(font, gTextPos[i], i == kCursorText ? 15 : 14, align, half);
     if (!gTexts[i]) {
       gMenuFailed = true;
@@ -1768,6 +1746,9 @@ void UpdateBackground(int count, int worn) {
     float cx = side * kNavX;
     PlaceShape(side < 0 ? kPrevFill : kNextFill, color, cx - nw, kNavY - nh, cx + nw, kNavY + nh, kTileRadius);
   }
+  float bw = kBackWidth / 2, bh = kBackHeight / 2;
+  PlaceShape(kBackFill, !dm::HasPeers() ? nullptr : gHoverBack ? kColTileHover : kColTile, kBackX - bw, kHeaderY - bh,
+             kBackX + bw, kHeaderY + bh, kTileRadius);
   Vec3 p = gCursorLocal;
   PlaceDot(kCursorOutline, gOnPanel ? kColCursorLine : nullptr, p.x, p.y, kCursorRadius + kCursorBorder);
   PlaceDot(kCursorDot, gOnPanel ? kColCursor : nullptr, p.x, p.y, kCursorRadius);
@@ -1886,7 +1867,11 @@ std::string Tile(std::string const& name, bool worn, bool hovered) {
 void UpdateTexts() {
   int count = TileCount();
   SetText(kClassText, count == 0 ? "<color=#FFFFFF>Skins</color>" : "<color=#FFFFFF>" + Title(gLocal.key) + "</color>");
-  SetText(kHintText, gSetSizeDelta ? "<color=#8C8F94><size=70%>aim + trigger</size></color>" : "");
+  if (dm::HasPeers())
+    SetText(kHintText, std::string(gHoverBack ? "<color=#FFFFFF>" : "<color=#C8CACD>") +
+                           "<size=80%><noparse><</noparse> Mods</size></color>");
+  else
+    SetText(kHintText, gSetSizeDelta ? "<color=#8C8F94><size=70%>aim + trigger</size></color>" : "");
   SetText(kNoteText, count == 0   ? "<color=#8C8F94><size=80%>Spawn as a class\nto pick its skin</size></color>"
                      : count == 1 ? "<color=#8C8F94><size=70%>No skins yet</size></color>"
                                   : "");
@@ -1919,7 +1904,8 @@ void UpdateTexts() {
     std::string name = TileName(index);
     bool on = index == 0 ? selected.empty() : name == selected;
     if (on) worn = i;
-    auto font = Alive(gMenuFont.obj) && IsAscii(name) ? gMenuFont.obj : gGameFont;
+    auto pixel = MenuFont(gGameFont);  // мог появиться позже, чем строилось меню
+    auto font = pixel && IsAscii(name) ? pixel : gGameFont;
     if (font != gTileFontObj[i]) {
       gTileFontObj[i] = font;
       Invoke(gSetFont, gTexts[kTileTexts + i], font);
@@ -2043,15 +2029,13 @@ void TickMenu() {
   Quat rigRot = camRot * Conj(headRot);
   Vec3 rigPos = camPos - Rotate(rigRot, headPos * scale);
 
-  // Нажатие левого стика — открыть / закрыть меню
-  bool stick = Button(kLeftHand, gStickClick);
-  if (stick && !gStickWas) {
-    gMenuVisible = !gMenuVisible;
+  // Открыть / закрыть — общее меню модов (dustmenu.h): левый стик → список «Mods» → Skins
+  // (без других модов с общим меню стик открывает и закрывает это меню сразу)
+  if (dm::IsOpen() != gMenuVisible) {
+    gMenuVisible = dm::IsOpen();
     if (gMenuVisible) RefreshTiles();
     Invoke(gSetActive, gMenuRoot.obj, &gMenuVisible);
-    Buzz(kLeftHand, 0.3f, 0.05f);
   }
-  gStickWas = stick;
 
   bool trigger = Button(kRightHand, gTriggerButton);
   bool triggerDown = trigger && !gTriggerWas;
@@ -2059,6 +2043,7 @@ void TickMenu() {
   if (!gMenuVisible || !tracked) {
     gHovered = -1;
     gHoverNav = 0;
+    gHoverBack = false;
     gOnPanel = false;
     if (!gHubRay) DrawRay({}, {0, 0, 1}, 0, camPos, scale);
     return;
@@ -2084,6 +2069,7 @@ void TickMenu() {
   }
   int count = TileCount();
   int hovered = -1, hoverNav = 0;
+  bool hoverBack = false;
   bool onPanel = false;
   Vec3 cursor{0, 0, 0};
   float bottom = PanelBottom(count);
@@ -2125,14 +2111,17 @@ void TickMenu() {
           for (int side : {-1, 1})
             if (std::fabs(x - side * kNavX) < kNavWidth / 2 && gPage + side >= 0 && gPage + side < pages)
               hoverNav = side;
+        hoverBack = dm::HasPeers() && std::fabs(x - kBackX) < kBackWidth / 2 && std::fabs(y - kHeaderY) < kBackHeight / 2;
       }
     }
   }
   float start = kRayStart * scale;
   DrawRay(origin + dir * start, dir, rayLength - start, camPos, scale);
-  if ((hovered >= 0 && hovered != gHovered) || (hoverNav && hoverNav != gHoverNav)) Buzz(kRightHand, 0.1f, 0.01f);
+  if ((hovered >= 0 && hovered != gHovered) || (hoverNav && hoverNav != gHoverNav) || (hoverBack && !gHoverBack))
+    Buzz(kRightHand, 0.1f, 0.01f);
   gHovered = hovered;
   gHoverNav = hoverNav;
+  gHoverBack = hoverBack;
   gOnPanel = onPanel;
   if (onPanel) {
     gCursorLocal = cursor;
@@ -2147,9 +2136,22 @@ void TickMenu() {
     gPage += gHoverNav;
     gHovered = -1;
     gHoverNav = 0;  // у края стрелка гаснет — подсветку снимаем сразу
+  } else if (triggerDown && gHoverBack) {
+    Buzz(kRightHand, 0.4f, 0.05f);
+    dm::Back();  // меню закроется на следующем кадре (dm::IsOpen), главный мод покажет список
   }
   UpdateTexts();
 }
+
+// Справа в списке «Mods»: что надето на свой класс
+std::string MenuStatus() {
+  if (gLocal.key.empty()) return "";
+  std::string skin = Selected(gLocal.key);
+  return skin.empty() ? "Original" : skin;
+}
+
+// Открыто меню на руке — своё или другого мода (общее меню, dustmenu.h): курок — его, а не экрана в хабе
+bool MenusOpen() { return gMenuVisible || dm::OthersOpen(); }
 
 #include "hub.inc"
 
@@ -2176,6 +2178,7 @@ void Tick() {
     }
   }
 
+  dm::Tick();
   TickMenu();
   TickHub();
 
@@ -2262,12 +2265,7 @@ bool InitMenu(Il2CppImage const* core) {
   gRendererSortingOrder = renderer ? Method(renderer, "set_sortingOrder", 1, false) : nullptr;
   auto rectTransform = il2cpp_class_from_name(core, "UnityEngine", "RectTransform");
   gSetSizeDelta = rectTransform ? Method(rectTransform, "set_sizeDelta", 1) : nullptr;  // без него — класс по центру
-  // Пиксельный шрифт меню — тоже необязательный
-  auto tmpAsset = il2cpp_class_from_name(tmp, "TMPro", "TMP_Asset");
-  auto material = il2cpp_class_from_name(core, "UnityEngine", "Material");
-  gFontMaterial = tmpAsset ? Method(tmpAsset, "get_material", 0) : nullptr;
-  gGetShader = material ? Method(material, "get_shader", 0) : nullptr;
-  gSetShader = material ? Method(material, "set_shader", 1) : nullptr;
+  if (auto material = il2cpp_class_from_name(core, "UnityEngine", "Material")) gGetShader = Method(material, "get_shader", 0);
   // PoseInterpolator — компонент видимых рук классов; пространство имён в ПК-сборках не видно — перебираем
   if (auto dust = FindImage("Dust.dll"))
     for (char const* ns : {"Dust", "Dust.Combat", "Dust.Physics", "Dust.Networking", "Dust.Utilities", ""})
@@ -2285,7 +2283,6 @@ bool InitMenu(Il2CppImage const* core) {
   gTextMeshProType = TypeOf(textMeshPro);
   gFontAssetType = TypeOf(fontAsset);
   gTriggerButton = KeepString("TriggerButton");
-  gStickClick = KeepString("Primary2DAxisClick");
   gDevicePosition = KeepString("DevicePosition");
   gDeviceRotation = KeepString("DeviceRotation");
   gPointerPosition = KeepString("PointerPosition");
@@ -2499,7 +2496,8 @@ bool Init() {
     }
   }
 
-  if (!InitMenu(core)) {
+  // Общее меню модов (dustmenu.h): левый стик, список «Mods», шрифт меню. Без него меню Skins не открыть
+  if (!dm::Init({"skins", "Skins", "Skins", kSkinDir, &MenuStatus}) || !InitMenu(core)) {
     gMenuFailed = true;
     LOG(ANDROID_LOG_ERROR, "не найдено что-то для меню — меню не будет (скин выбирается в skins.cfg)");
   }

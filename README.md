@@ -84,7 +84,7 @@ You only need a computer once — to install the mod. You also need a USB cable 
 
 | | PC | Quest |
 |---|---|---|
-| Open the menu | F2 | Press the left stick |
+| Open the menu | F2 | Press the left stick (if you have other mods with a menu, pick **Skins** in the list) |
 | Put on a skin | Click or 1–4 | Point the right controller and pull the trigger |
 | Another page | ← → | Arrows at the bottom of the menu |
 | Hub terminal: press a button | Aim at the screen, left click | Point the right controller, pull the trigger |
@@ -162,7 +162,7 @@ Something doesn't work, or you have an idea? Write to us on [Discord](https://di
 
 | | ПК | Quest |
 |---|---|---|
-| Открыть меню | F2 | Нажми левый стик |
+| Открыть меню | F2 | Нажми левый стик (если есть другие моды с меню, выбери в списке **Skins**) |
 | Надеть скин | Клик или 1–4 | Наведи правый контроллер и нажми курок |
 | Другая страница | ← → | Стрелки внизу меню |
 | Терминал в хабе: нажать кнопку | Прицел на экран, левый клик | Наведи правый контроллер и нажми курок |
