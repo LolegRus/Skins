@@ -86,7 +86,7 @@ Il2CppObject* (*il2cpp_gchandle_get_target)(void*);
 uint32_t (*il2cpp_array_length)(Il2CppArray*);
 void* (*il2cpp_resolve_icall)(char const*);
 
-constexpr char kModVersion[] = "1.0.0";  // как "version" в mod.json; её же показывает терминал в хабе
+constexpr char kModVersion[] = "1.0.1";  // как "version" в mod.json; её же показывает терминал в хабе
 constexpr char kSkinDir[] = "/sdcard/ModData/org.VRDojo.Dust/Mods/Skins/";
 constexpr char kExtension[] = ".skin";
 constexpr char kConfig[] = "skins.cfg";
